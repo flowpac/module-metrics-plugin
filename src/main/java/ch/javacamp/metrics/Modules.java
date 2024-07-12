@@ -44,10 +44,10 @@ public class Modules {
                 .map(ClassDescriptor::className)
                 .collect(Collectors.toSet());
 
-        for (var c : module.classes()) {
-            for (var dependency : c.dependencies()) {
+        for (var classDescriptor : module.classes()) {
+            for (var dependency : classDescriptor.dependencies()) {
                 if (allClassNamesOutsideCurrentModule.contains(dependency)) {
-                    result.add(c);
+                    result.add(classDescriptor);
                 }
             }
         }

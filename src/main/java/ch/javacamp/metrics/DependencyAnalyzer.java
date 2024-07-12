@@ -5,14 +5,14 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class DependencyAnalyzer {
 
@@ -46,60 +46,62 @@ public class DependencyAnalyzer {
     }
 
     private Set<String> extractExceptionTypes(MethodNode method) {
-        Set<String> dependentClasses = new HashSet<>();
-        if(method.exceptions != null){
-            dependentClasses.addAll(method.exceptions.stream().map(this::transformClassName).toList());
+        if (method.exceptions == null) {
+            return Set.of();
         }
-        return dependentClasses;
+        return method.exceptions.stream()
+                .map(this::transformClassName)
+                .collect(Collectors.toSet());
     }
 
     private Set<String> extractMethodInstructionTypes(MethodNode method) {
+        if (method.instructions == null) {
+            return Set.of();
+        }
+
         Set<String> dependentClasses = new HashSet<>();
-        if(method.instructions != null){
-            for(var instr: method.instructions){
-                instr.accept(new MethodVisitor(Opcodes.ASM9) {
-                    @Override
-                    public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
-                        dependentClasses.add(transformClassName(owner));
-                    }
-                });
-            }
+        for (var instr : method.instructions) {
+            instr.accept(new MethodVisitor(Opcodes.ASM9) {
+                @Override
+                public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
+                    dependentClasses.add(transformClassName(owner));
+                }
+            });
         }
         return dependentClasses;
     }
 
     private Set<String> extractLocalVariable(MethodNode method) {
-        Set<String> dependentClasses = new HashSet<>();
-        if (method.localVariables != null) {
-            for (LocalVariableNode localVar : method.localVariables) {
-                Type localVarType = Type.getType(localVar.desc);
-                addType(localVarType).ifPresent(dependentClasses::add);
-            }
+        if (method.localVariables == null) {
+            return Set.of();
         }
-        return dependentClasses;
+        return method.localVariables.stream()
+                .map(l -> l.desc).map(Type::getType)
+                .map(this::addType)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toSet());
     }
 
     private Set<String> extractMethodArguments(MethodNode method) {
-        Set<String> dependentClasses = new HashSet<>();
-        Type[] argumentTypes = Type.getArgumentTypes(method.desc);
-        for (Type argType : argumentTypes) {
-            addType(argType).ifPresent(dependentClasses::add);
-        }
-        return dependentClasses;
+        return Arrays.stream(Type.getArgumentTypes(method.desc))
+                .map(this::addType)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toSet());
     }
 
     private Optional<String> extractReturnType(MethodNode method) {
-        Type returnType = Type.getReturnType(method.desc);
-        return addType(returnType);
+        return addType(Type.getReturnType(method.desc));
     }
 
     private Set<String> extractFields(ClassNode classNode) {
-        Set<String> dependentClasses = new HashSet<>();
-        for (FieldNode field : classNode.fields) {
-            Type type = Type.getType(field.desc);
-            addType(type).ifPresent(dependentClasses::add);
-        }
-        return dependentClasses;
+        return classNode.fields.stream()
+                .map(field -> Type.getType(field.desc))
+                .map(this::addType)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toSet());
     }
 
     private Set<String> extractSuperclassAndInterfaces(ClassNode classNode) {
@@ -122,13 +124,14 @@ public class DependencyAnalyzer {
         return Optional.empty();
     }
 
-    private String transformClassName(String c){
-        return c.replace("/",".");
-    }
     private boolean isAbstract(ClassNode classNode) {
         boolean isInterface = (classNode.access & Opcodes.ACC_INTERFACE) != 0;
         boolean isAbstractClass = (classNode.access & Opcodes.ACC_ABSTRACT) != 0;
         return isAbstractClass || isInterface;
+    }
+
+    private String transformClassName(String c) {
+        return c.replace("/", ".");
     }
 
 }

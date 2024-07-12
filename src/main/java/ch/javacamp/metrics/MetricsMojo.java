@@ -5,116 +5,53 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.project.MavenProject;
-import org.objectweb.asm.ClassReader;
+import org.fusesource.jansi.Ansi;
 
 import javax.inject.Inject;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.file.FileVisitOption;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 
 @Mojo(name = "analyze", defaultPhase = LifecyclePhase.PRE_SITE)
 public class MetricsMojo extends AbstractMojo {
 
     private final MavenProject project;
-    private final ModuleCollector moduleCollector;
+    private final Modules modules;
     private final ModuleProcessingState processingState;
+    private final ClassAnalyzer classAnalyzer;
 
     @Inject
-    public MetricsMojo(MavenProject project, ModuleCollector collector, ModuleProcessingState procssingState) {
+    public MetricsMojo(MavenProject project, Modules collector, ModuleProcessingState processingState, ClassAnalyzer classAnalyzer) {
         this.project = project;
-        this.moduleCollector = collector;
-        this.processingState = procssingState;
-    }
-
-    private static ClassInfo analyzeClass(File f) {
-        try {
-            ClassReader reader = new ClassReader(new FileInputStream(f));
-            return DependencyAnalyzer.getDependentClasses(reader);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static boolean isClassFile(File f) {
-        return f.getName().endsWith(".class");
+        this.modules = collector;
+        this.processingState = processingState;
+        this.classAnalyzer = classAnalyzer;
     }
 
     @Override
-    public void execute() throws MojoExecutionException {
+    public void execute() {
         project.getModules().forEach(processingState::addDetectedModule);
         processingState.addProcessedModule(project.getArtifactId());
 
-        processClasses(project.getBuild().getOutputDirectory());
+        var classes = classAnalyzer.processClasses(Path.of(project.getBuild().getOutputDirectory()));
+        modules.addModule(new ModuleDescriptor(project.getArtifactId(), classes));
 
         if (processingState.allModulesProcessed()) {
             compute();
         }
-
     }
 
     private void compute() {
-        getLog().info("Computation");
+        getLog().info(Ansi.ansi().bold().render("Computation").reset().toString());
 
-        for (ModuleInfo currentModule : moduleCollector.getModules()) {
-            var moduleClasses = currentModule.allClasses();
-            var otherModules = moduleCollector.otherModules(currentModule);
+        for (ModuleDescriptor currentModule : modules.getModules()) {
+            var result = modules.computeMetrics(currentModule);
 
-            var outsideClassesWithDependenciesToMe = otherModules
-                    .stream()
-                    .flatMap(x -> x.classes().stream())
-                    .filter(c -> c.hasDependency(moduleClasses))
-                    .count();
-
-            int classesWithForeignDependencies = 0;
-            var allOtherClasses = otherModules.stream()
-                    .flatMap(x -> x.classes().stream())
-                    .map(ClassInfo::className)
-                    .collect(Collectors.toSet());
-
-            for (ClassInfo c : currentModule.classes()) {
-                for (var dep : c.dependencies()) {
-                    if (allOtherClasses.contains(dep)) {
-                        classesWithForeignDependencies++;
-                        break;
-                    }
-                }
-            }
-
-            getLog().info(currentModule.name());
-            getLog().info(" A: " + currentModule.abstractness());
-            getLog().info("Ca: " + outsideClassesWithDependenciesToMe);
-            getLog().info("Ce: " + classesWithForeignDependencies);
-            var ca = outsideClassesWithDependenciesToMe;
-            var ce = classesWithForeignDependencies;
-            var i = (double) ce / (double) (ce + ca);
-            getLog().info(" I: " + i);
-            var a = currentModule.abstractness();
-            getLog().info(" D: " + Math.abs((a + i - 1) / 2.0));
-        }
-    }
-
-    private void processClasses(String classesDirectory) {
-        Set<ClassInfo> s = new HashSet<>();
-        var base = Path.of(classesDirectory);
-        if (base.toFile().exists()) {
-            try (var files = Files.walk(base, FileVisitOption.FOLLOW_LINKS)) {
-                files.map(Path::toFile)
-                        .filter(MetricsMojo::isClassFile)
-                        .map(MetricsMojo::analyzeClass)
-                        .forEach(s::add);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        if (!s.isEmpty()) {
-            moduleCollector.addModule(new ModuleInfo(project.getArtifactId(), s));
+            getLog().info(Ansi.ansi().fgGreen().bold().render(currentModule.name()).reset().toString());
+            getLog().info(" A: " + result.abstractness());
+            getLog().info("Ca: " + result.ca());
+            getLog().info("Ce: " + result.ce());
+            getLog().info(" I: " + result.instability());
+            getLog().info(" D: " + result.distance());
         }
     }
 

@@ -12,7 +12,6 @@ public class Modules {
 
     private final List<ModuleDescriptor> modules = new ArrayList<>();
 
-
     public void addModule(ModuleDescriptor moduleDescriptor){
         if(moduleDescriptor.totalClasses() > 0) {
             this.modules.add(moduleDescriptor);
@@ -45,9 +44,9 @@ public class Modules {
                 .map(ClassDescriptor::className)
                 .collect(Collectors.toSet());
 
-        for (ClassDescriptor c : module.classes()) {
-            for (var dep : c.dependencies()) {
-                if (allClassNamesOutsideCurrentModule.contains(dep)) {
+        for (var c : module.classes()) {
+            for (var dependency : c.dependencies()) {
+                if (allClassNamesOutsideCurrentModule.contains(dependency)) {
                     result.add(c);
                 }
             }
@@ -66,6 +65,5 @@ public class Modules {
         var d = Math.abs((a + i - 1) / 2.0);
         return new MetricsResult(module.totalClasses(), ca, ce, a, i, d);
     }
-
 
 }

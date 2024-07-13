@@ -42,7 +42,24 @@ public class DependencyAnalyzer {
 
         var ownName = transformClassName(classNode.name);
         dependentClasses.remove(ownName);
-        return new ClassDescriptor(ownName, isAbstract(classNode), dependentClasses);
+        var visibility = extractVisibility(classNode);
+        var numOfMethods = (int)classNode.methods.stream().filter(m -> !m.name.contains("<init>")).count();
+        var numOfPublicMethods = (int)classNode.methods.stream().filter(m -> (m.access & Opcodes.ACC_PUBLIC) != 0).count();
+        return new ClassDescriptor(ownName, isAbstract(classNode), visibility, numOfMethods, numOfPublicMethods, dependentClasses);
+    }
+
+    private static Visibility extractVisibility(ClassNode classNode) {
+        Visibility visibility;
+        if ((classNode.access & Opcodes.ACC_PUBLIC) != 0) {
+            visibility = Visibility.PUBLIC;
+        } else if ((classNode.access & Opcodes.ACC_PROTECTED) != 0) {
+            visibility = Visibility.PROTECTED;
+        } else if ((classNode.access & Opcodes.ACC_PRIVATE) != 0) {
+            visibility = Visibility.PRIVATE;
+        } else {
+            visibility = Visibility.DEFAULT;
+        }
+        return visibility;
     }
 
     private Set<String> extractExceptionTypes(MethodNode method) {

@@ -22,6 +22,16 @@ public record ModuleDescriptor(String name, Set<ClassDescriptor> classes) {
         return (double)abstractClasses() / (double)totalClasses();
     }
 
+    public double averageMethodsPerClass(){
+        var methods = classes.stream().map(ClassDescriptor::numOfMethods).reduce(Integer::sum).orElse(0);
+        return (double) methods / (double) totalClasses();
+    }
+
+    public double averagePublicMethodsPerClass(){
+        var methods = classes.stream().map(ClassDescriptor::numOfPublicMethods).reduce(Integer::sum).orElse(0);
+        return (double) methods / (double) totalClasses();
+    }
+
 
 
 }

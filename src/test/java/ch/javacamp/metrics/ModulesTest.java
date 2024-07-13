@@ -14,21 +14,21 @@ class ModulesTest {
     public void t1(){
         Modules modules = new Modules();
 
-        var d1a = new ClassDescriptor("a-01", false, Set.of("a-02"));
-        var d1b = new ClassDescriptor("a-02", false, Set.of("b-01"));
-        var d1c = new ClassDescriptor("a-03", false, Set.of("c-01"));
+        var d1a = createClassDescriptor("a-01", Set.of("a-02"));
+        var d1b = createClassDescriptor("a-02", Set.of("b-01"));
+        var d1c = createClassDescriptor("a-03", Set.of("c-01"));
         var modA = new ModuleDescriptor("mod-a", Set.of(d1a, d1b, d1c));
         modules.addModule(modA);
 
-        var d2a = new ClassDescriptor("b-01", false, Set.of("a-01"));
-        var d2b = new ClassDescriptor("b-02", false, Set.of("a-01"));
-        var d2c = new ClassDescriptor("b-03", false, Set.of("a-02"));
+        var d2a = createClassDescriptor("b-01", Set.of("a-01"));
+        var d2b = createClassDescriptor("b-02", Set.of("a-01"));
+        var d2c = createClassDescriptor("b-03", Set.of("a-02"));
         var modB = new ModuleDescriptor("mod-b", Set.of(d2a, d2b, d2c));
         modules.addModule(modB);
 
-        var d3a = new ClassDescriptor("c-01", false, Set.of("a-01"));
-        var d3b = new ClassDescriptor("c-02", false, Set.of("b-02"));
-        var d3c = new ClassDescriptor("c-03", false, Set.of());
+        var d3a = createClassDescriptor("c-01", Set.of("a-01"));
+        var d3b = createClassDescriptor("c-02", Set.of("b-02"));
+        var d3c = createClassDescriptor("c-03", Set.of());
         var modC = new ModuleDescriptor("mod-c", Set.of(d3a, d3b, d3c));
         modules.addModule(modC);
 
@@ -52,5 +52,9 @@ class ModulesTest {
         Assertions.assertThat(metricsC.ce()).isEqualTo(2);
         Assertions.assertThat(metricsC.abstractness()).isEqualTo(0);
         Assertions.assertThat(metricsC.instability()).isCloseTo(0.66, Offset.offset(0.01));
+    }
+
+    private ClassDescriptor createClassDescriptor(String name, Set<String> dependencies){
+        return new ClassDescriptor(name, false, Visibility.PUBLIC, 0, 0, dependencies);
     }
 }

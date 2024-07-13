@@ -63,7 +63,8 @@ public class Modules {
         var i = (double) ce / (double) (ce + ca);
         var a = module.abstractness();
         var d = Math.abs((a + i - 1) / 2.0);
-        return new MetricsResult(module.name(), module.totalClasses(), ca, ce, a, i, d);
+        return new MetricsResult(module.name(), module.totalClasses(), ca, ce, a, i, d,
+                module.averageMethodsPerClass(), module.averagePublicMethodsPerClass());
     }
 
     public List<MetricsResult> computeMetrics(){

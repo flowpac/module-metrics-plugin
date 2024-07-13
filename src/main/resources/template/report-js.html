@@ -110,6 +110,14 @@
           <td class="name">Distance</td>
           <td class="value"></td>
         </tr>
+        <tr>
+          <td class="name">Average Methods per Class</td>
+          <td class="value"></td>
+        </tr>
+        <tr>
+          <td class="name">Average Public Methods per Class</td>
+          <td class="value"></td>
+        </tr>
       </table>
       <canvas id="" width="550" height="550"></canvas>
     </template>
@@ -148,6 +156,8 @@
         td[7].textContent = d.ce.toFixed(0);
         td[9].textContent = d.instability.toFixed(2);
         td[11].textContent = d.distance.toFixed(2);
+        td[13].textContent = d.averageMethodsPerClass.toFixed(2);
+        td[15].textContent = d.averagePublicMethodsPerClass.toFixed(2);
 
         let title = clone.querySelectorAll('h2')
         title[0].textContent = d.name;

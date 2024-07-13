@@ -50,6 +50,35 @@ class DependencyAnalyzerTest {
         Assertions.assertThat(result.isAbstract()).isTrue();
     }
 
+    @Test
+    @DisplayName("Test PUBLIC visibility")
+    public void t5() throws Exception {
+        testVisibility(I1Impl.class, Visibility.PUBLIC);
+    }
+
+    @Test
+    @DisplayName("Test DEFAULT visibility")
+    public void t7() throws Exception {
+        testVisibility(C4.class, Visibility.DEFAULT);
+    }
+
+    @Test
+    @DisplayName("Number of Methods")
+    public void t8() throws Exception {
+        String className = I1Impl.class.getName();
+        ClassReader classReader = new ClassReader(className);
+        var result = out.getDependentClasses(classReader);
+        Assertions.assertThat(result.numOfMethods()).isEqualTo(2);
+    }
+
+    private void testVisibility(Class<?> clazz, Visibility expected) throws Exception{
+        String className = clazz.getName();
+        ClassReader classReader = new ClassReader(className);
+        var result = out.getDependentClasses(classReader);
+        Assertions.assertThat(result.visibility()).isEqualTo(expected);
+    }
+
+
     public static class DemoClass {
         private String aStringField;
 
@@ -67,6 +96,10 @@ class DependencyAnalyzerTest {
     public interface I1 {}
     public interface I2 {}
     public static abstract class AnotherClass{}
-    public static class I1Impl extends AnotherClass implements I1, I2{}
+    public static class I1Impl extends AnotherClass implements I1, I2{
+        public void foo(){}
+        private void bar(){}
+    }
+    static class C4 { }
 
 }

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>OO Design Quality Metrics</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAMFBMVEU0OkArMjhobHEoPUPFEBIuO0L+AAC2FBZ2JyuNICOfGx7xAwTjCAlCNTvVDA1aLzQ3COjMAAAAVUlEQVQI12NgwAaCDSA0888GCItjn0szWGBJTVoGSCjWs8TleQCQYV95evdxkFT8Kpe0PLDi5WfKd4LUsN5zS1sKFolt8bwAZrCaGqNYJAgFDEpQAAAzmxafI4vZWwAAAABJRU5ErkJggg==" />
+    <style>
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+          Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue',
+          sans-serif;
+      }
+
+      .name {
+        font-weight: bolder;
+        min-width: 200px;
+        width: 30%;
+      }
+
+      .value {
+        width: 70%;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      function drawDiagram(name, abstractness, instability) {
+        const canvas = document.getElementById(name)
+        const ctx = canvas.getContext('2d')
+
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        ctx.moveTo(50, 50)
+        ctx.lineTo(50, 500)
+        ctx.lineTo(500, 500)
+        ctx.stroke()
+
+        ctx.beginPath()
+        ctx.moveTo(450, 500)
+        ctx.lineTo(50, 100)
+        ctx.stroke()
+
+        ctx.beginPath()
+        ctx.lineWidth = 5
+        ctx.arc(50, 100, 3, 0 * Math.PI, 2 * Math.PI)
+        ctx.stroke()
+
+        ctx.beginPath()
+        ctx.lineWidth = 5
+        ctx.arc(450, 500, 3, 0 * Math.PI, 2 * Math.PI)
+        ctx.stroke()
+
+        ctx.beginPath()
+        ctx.lineWidth = 2
+        ctx.arc(50, 500, 150, 1.5 * Math.PI, 2 * Math.PI)
+        ctx.stroke()
+
+        ctx.font = '22px serif'
+        ctx.fillText('Instability', 230, 520)
+        ctx.save()
+
+        ctx.rotate(-Math.PI / 2)
+        ctx.font = '22px serif'
+        ctx.fillText('Abstractness', -350, 40)
+        ctx.restore()
+
+        ctx.font = '15px serif'
+        ctx.fillText('(0,1)', 10, 100)
+        ctx.fillText('(1,0)', 450, 520)
+
+        ctx.beginPath()
+        ctx.strokeStyle = 'red'
+        ctx.arc(
+          50 + instability * 400,
+          500 - 400 * abstractness,
+          5,
+          0,
+          2 * Math.PI
+        )
+        ctx.stroke()
+      }
+    </script>
+
+    <h1>OO Design Quality Metrics</h1>
+
+    <template id="module-block">
+      <h2></h2>
+      <table>
+        <tr>
+          <td class="name">Number of Classes</td>
+          <td class="value"></td>
+        </tr>
+        <tr>
+          <td class="name">Abstractness</td>
+          <td class="value"></td>
+        </tr>
+        <tr>
+          <td class="name">Afferent Couplings (Ca)</td>
+          <td class="value"></td>
+        </tr>
+        <tr>
+          <td class="name">Efferent Couplings (Ce)</td>
+          <td class="value"></td>
+        </tr>
+        <tr>
+          <td class="name">Instability</td>
+          <td class="value"></td>
+        </tr>
+        <tr>
+          <td class="name">Distance</td>
+          <td class="value"></td>
+        </tr>
+      </table>
+      <canvas id="" width="550" height="550"></canvas>
+    </template>
+
+    <script>
+      let testdata = [
+        {
+          name: "j-mod-1",
+          classes: 10,
+          abstractness: 0.0,
+          ca: 1,
+          ce: 2,
+          instability: 1.0,
+          distance: 0.3
+        },
+        {
+          name: "j-mod-2",
+          classes: 14,
+          abstractness: 0.4,
+          ca: 1,
+          ce: 2,
+          instability: 0.3,
+          distance: 0.3
+        }
+      ];
+
+      let data = ##data##;
+
+      data.forEach(d => {
+        const template = document.querySelector('#module-block')
+        const clone = template.content.cloneNode(true)
+        let td = clone.querySelectorAll('td')
+        td[1].textContent = d.numberOfClasses;
+        td[3].textContent = d.abstractness.toFixed(2);
+        td[5].textContent = d.ca.toFixed(0);
+        td[7].textContent = d.ce.toFixed(0);
+        td[9].textContent = d.instability.toFixed(2);
+        td[11].textContent = d.distance.toFixed(2);
+
+        let title = clone.querySelectorAll('h2')
+        title[0].textContent = d.name;
+
+        let canvas = clone.querySelectorAll('canvas')
+        canvas[0].id = "c-"+d.name;
+        template.parentElement.appendChild(clone);
+        drawDiagram(canvas[0].id, d.abstractness, d.instability);
+
+      });
+    </script>
+  </body>
+</html>

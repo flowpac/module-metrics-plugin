@@ -63,7 +63,15 @@ public class Modules {
         var i = (double) ce / (double) (ce + ca);
         var a = module.abstractness();
         var d = Math.abs((a + i - 1) / 2.0);
-        return new MetricsResult(module.totalClasses(), ca, ce, a, i, d);
+        return new MetricsResult(module.name(), module.totalClasses(), ca, ce, a, i, d);
+    }
+
+    public List<MetricsResult> computeMetrics(){
+        List<MetricsResult> result = new ArrayList<>();
+        for (ModuleDescriptor currentModule : getModules()) {
+            result.add(computeMetrics(currentModule));
+        }
+        return result;
     }
 
 }

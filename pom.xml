@@ -21,7 +21,7 @@
     </developers>
     <scm>
         <developerConnection>scm:git:git@github.com:UeliKurmann/java-totp.git</developerConnection>
-        <tag>module-metrics-plugin-0.1.0</tag>
+        <tag>module-metrics-plugin-0.2.0</tag>
         <url>https://github.com/UeliKurmann/java-totp</url>
     </scm>
 

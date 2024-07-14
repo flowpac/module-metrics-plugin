@@ -1,5 +1,6 @@
-package ch.javacamp.metrics;
+package ch.javacamp.metrics.analyzer;
 
+import ch.javacamp.metrics.core.Visibility;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

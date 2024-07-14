@@ -1,4 +1,4 @@
-package ch.javacamp.metrics;
+package ch.javacamp.metrics.core;
 
 import org.assertj.core.api.Assertions;
 import org.assertj.core.data.Offset;

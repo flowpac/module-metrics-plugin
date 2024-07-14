@@ -1,5 +1,6 @@
-package ch.javacamp.metrics;
+package ch.javacamp.metrics.analyzer;
 
+import ch.javacamp.metrics.core.ClassDescriptor;
 import org.objectweb.asm.ClassReader;
 
 import java.io.File;

@@ -1,5 +1,6 @@
-package ch.javacamp.metrics;
+package ch.javacamp.metrics.rendering;
 
+import ch.javacamp.metrics.core.MetricsResult;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.io.IOUtils;
@@ -15,13 +16,13 @@ public class Renderer {
 
     private final Gson gson = new GsonBuilder().setPrettyPrinting().serializeSpecialFloatingPointValues().create();
 
-    public void render(Path outputFile, List<MetricsResult> results){
-        try(var is = getClass().getClassLoader().getResourceAsStream(HTML_TEMPLATE)) {
+    public void render(Path outputFile, List<MetricsResult> results) {
+        try (var is = getClass().getClassLoader().getResourceAsStream(HTML_TEMPLATE)) {
             Objects.requireNonNull(is);
             var template = IOUtils.toString(is);
             template = template.replace("##data##", gson.toJson(results));
             Files.writeString(outputFile, template);
-        }catch(Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

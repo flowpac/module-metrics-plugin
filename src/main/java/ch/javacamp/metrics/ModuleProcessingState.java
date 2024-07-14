@@ -10,15 +10,15 @@ public class ModuleProcessingState {
     private final Set<String> detectedModules = new HashSet<>();
     private final Set<String> processedModules = new HashSet<>();
 
-    public boolean allModulesProcessed(){
+    public boolean allModulesProcessed() {
         return detectedModules.size() == processedModules.size();
     }
 
-    public void addDetectedModule(String detectedModule){
+    public void addDetectedModule(String detectedModule) {
         this.detectedModules.add(detectedModule);
     }
 
-    public void addProcessedModule(String processedModule){
+    public void addProcessedModule(String processedModule) {
         this.processedModules.add(processedModule);
     }
 

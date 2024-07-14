@@ -1,5 +1,9 @@
 package ch.javacamp.metrics;
 
+import ch.javacamp.metrics.analyzer.ClassAnalyzer;
+import ch.javacamp.metrics.core.ModuleDescriptor;
+import ch.javacamp.metrics.core.Modules;
+import ch.javacamp.metrics.rendering.Renderer;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -57,11 +61,11 @@ public class MetricsMojo extends AbstractMojo {
 
     private void renderReport() {
         var parentProject = project;
-        while(parentProject.getParent() != null){
+        while (parentProject.getParent() != null) {
             parentProject = parentProject.getParent();
         }
         var targetDir = new File(parentProject.getBasedir(), "target");
-        if(targetDir.exists() || targetDir.mkdir()){
+        if (targetDir.exists() || targetDir.mkdir()) {
             renderer.render(targetDir.toPath().resolve("oo-metrics-report.html"), modules.computeMetrics());
         }
     }

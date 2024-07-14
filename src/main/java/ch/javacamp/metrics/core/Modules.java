@@ -1,4 +1,4 @@
-package ch.javacamp.metrics;
+package ch.javacamp.metrics.core;
 
 import javax.inject.Singleton;
 import java.util.ArrayList;
@@ -12,8 +12,8 @@ public class Modules {
 
     private final List<ModuleDescriptor> modules = new ArrayList<>();
 
-    public void addModule(ModuleDescriptor moduleDescriptor){
-        if(moduleDescriptor.totalClasses() > 0) {
+    public void addModule(ModuleDescriptor moduleDescriptor) {
+        if (moduleDescriptor.totalClasses() > 0) {
             this.modules.add(moduleDescriptor);
         }
     }
@@ -22,11 +22,11 @@ public class Modules {
         return modules;
     }
 
-    public Set<ModuleDescriptor> otherModules(ModuleDescriptor toExclude){
+    public Set<ModuleDescriptor> otherModules(ModuleDescriptor toExclude) {
         return modules.stream().filter(x -> x != toExclude).collect(Collectors.toSet());
     }
 
-    public Set<ClassDescriptor> externalClassesUsingClassesInThisModule(ModuleDescriptor module){
+    public Set<ClassDescriptor> externalClassesUsingClassesInThisModule(ModuleDescriptor module) {
         var classNamesCurrentModule = module.allClassNames();
         var otherModules = otherModules(module);
 
@@ -37,7 +37,7 @@ public class Modules {
                 .collect(Collectors.toSet());
     }
 
-    public Set<ClassDescriptor> externalClassesUsedByThisModule(ModuleDescriptor module){
+    public Set<ClassDescriptor> externalClassesUsedByThisModule(ModuleDescriptor module) {
         Set<ClassDescriptor> result = new HashSet<>();
         var allClassNamesOutsideCurrentModule = otherModules(module).stream()
                 .flatMap(x -> x.classes().stream())
@@ -54,7 +54,7 @@ public class Modules {
         return result;
     }
 
-    public MetricsResult computeMetrics(ModuleDescriptor module){
+    public MetricsResult computeMetrics(ModuleDescriptor module) {
         var outsideClassesWithDependenciesToMe = externalClassesUsingClassesInThisModule(module);
         var classesWithForeignDependencies = externalClassesUsedByThisModule(module);
 
@@ -67,7 +67,7 @@ public class Modules {
                 module.averageMethodsPerClass(), module.averagePublicMethodsPerClass());
     }
 
-    public List<MetricsResult> computeMetrics(){
+    public List<MetricsResult> computeMetrics() {
         List<MetricsResult> result = new ArrayList<>();
         for (ModuleDescriptor currentModule : getModules()) {
             result.add(computeMetrics(currentModule));

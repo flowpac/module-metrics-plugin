@@ -1,5 +1,7 @@
-package ch.javacamp.metrics;
+package ch.javacamp.metrics.analyzer;
 
+import ch.javacamp.metrics.core.ClassDescriptor;
+import ch.javacamp.metrics.core.Visibility;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -43,12 +45,20 @@ public class DependencyAnalyzer {
         var ownName = transformClassName(classNode.name);
         dependentClasses.remove(ownName);
         var visibility = extractVisibility(classNode);
-        var numOfMethods = (int)classNode.methods.stream().filter(m -> !m.name.contains("<init>")).count();
-        var numOfPublicMethods = (int)classNode.methods.stream().filter(m -> (m.access & Opcodes.ACC_PUBLIC) != 0).count();
+        var numOfMethods = countMethodsInClass(classNode);
+        var numOfPublicMethods = countPublicMethodsInClass(classNode);
         return new ClassDescriptor(ownName, isAbstract(classNode), visibility, numOfMethods, numOfPublicMethods, dependentClasses);
     }
 
-    private static Visibility extractVisibility(ClassNode classNode) {
+    private static int countPublicMethodsInClass(ClassNode classNode) {
+        return (int) classNode.methods.stream().filter(m -> (m.access & Opcodes.ACC_PUBLIC) != 0).count();
+    }
+
+    private static int countMethodsInClass(ClassNode classNode) {
+        return (int) classNode.methods.stream().filter(m -> !m.name.contains("<init>")).count();
+    }
+
+    private Visibility extractVisibility(ClassNode classNode) {
         Visibility visibility;
         if ((classNode.access & Opcodes.ACC_PUBLIC) != 0) {
             visibility = Visibility.PUBLIC;

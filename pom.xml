@@ -4,7 +4,7 @@
 
     <groupId>ch.javacamp.metrics</groupId>
     <artifactId>module-metrics-plugin</artifactId>
-    <version>0.3.0-SNAPSHOT</version>
+    <version>0.3.1</version>
     <packaging>maven-plugin</packaging>
 
     <name>Module OOP Metrics Maven Plugin</name>
@@ -21,7 +21,7 @@
     </developers>
     <scm>
         <developerConnection>scm:git:git@github.com:UeliKurmann/java-totp.git</developerConnection>
-        <tag>module-metrics-plugin-0.2.0</tag>
+        <tag>module-metrics-plugin-0.3.0</tag>
         <url>https://github.com/UeliKurmann/java-totp</url>
     </scm>
 

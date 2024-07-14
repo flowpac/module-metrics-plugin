@@ -11,7 +11,9 @@ public class ModuleProcessingState {
     private final Set<String> processedModules = new HashSet<>();
 
     public boolean allModulesProcessed() {
-        return detectedModules.size() == processedModules.size();
+        var todo = new HashSet<>(detectedModules);
+        todo.removeAll(processedModules);
+        return todo.isEmpty();
     }
 
     public void addDetectedModule(String detectedModule) {

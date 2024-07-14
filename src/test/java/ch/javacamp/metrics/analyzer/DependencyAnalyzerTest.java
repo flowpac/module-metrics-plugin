@@ -23,7 +23,7 @@ class DependencyAnalyzerTest {
     void t1() throws Exception {
         String className = DemoClass.class.getName();
         ClassReader classReader = new ClassReader(className);
-        var result = out.getDependentClasses(classReader);
+        var result = out.analyze(classReader);
 
         Assertions.assertThat(result.className()).isEqualTo(DemoClass.class.getName());
         Assertions.assertThat(result.dependencies()).containsExactlyInAnyOrder("java.util.Date","java.lang.Long", "java.lang.Short", "java.lang.Boolean", "java.lang.String", "java.lang.Object", "java.lang.Integer", IllegalArgumentException.class.getName());
@@ -34,7 +34,7 @@ class DependencyAnalyzerTest {
     public void t2() throws Exception {
         String className = I1Impl.class.getName();
         ClassReader classReader = new ClassReader(className);
-        var result = out.getDependentClasses(classReader);
+        var result = out.analyze(classReader);
 
         Assertions.assertThat(result.className()).isEqualTo(I1Impl.class.getName());
         Assertions.assertThat(result.dependencies()).containsExactlyInAnyOrder(I1.class.getName(), I2.class.getName(), AnotherClass.class.getName());
@@ -45,7 +45,7 @@ class DependencyAnalyzerTest {
     public void t3() throws Exception {
         String className = I1.class.getName();
         ClassReader classReader = new ClassReader(className);
-        var result = out.getDependentClasses(classReader);
+        var result = out.analyze(classReader);
 
         Assertions.assertThat(result.className()).isEqualTo(I1.class.getName());
         Assertions.assertThat(result.isAbstract()).isTrue();
@@ -63,19 +63,10 @@ class DependencyAnalyzerTest {
         testVisibility(C4.class, Visibility.DEFAULT);
     }
 
-    @Test
-    @DisplayName("Number of Methods")
-    public void t8() throws Exception {
-        String className = I1Impl.class.getName();
-        ClassReader classReader = new ClassReader(className);
-        var result = out.getDependentClasses(classReader);
-        Assertions.assertThat(result.numOfMethods()).isEqualTo(2);
-    }
-
     private void testVisibility(Class<?> clazz, Visibility expected) throws Exception{
         String className = clazz.getName();
         ClassReader classReader = new ClassReader(className);
-        var result = out.getDependentClasses(classReader);
+        var result = out.analyze(classReader);
         Assertions.assertThat(result.visibility()).isEqualTo(expected);
     }
 

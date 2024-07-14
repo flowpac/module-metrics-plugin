@@ -63,8 +63,16 @@ public class Modules {
         var i = (double) ce / (double) (ce + ca);
         var a = module.abstractness();
         var d = Math.abs((a + i - 1) / 2.0);
+        var lcom4 = module.averageLCOM4();
+        var shareOfGetterSetters = module.shareOfGetterSetters();
+        var shareOfMethodsWithLocalCalls = module.shareOfMethodsWithLocalCalls();
+
         return new MetricsResult(module.name(), module.totalClasses(), ca, ce, a, i, d,
-                module.averageMethodsPerClass(), module.averagePublicMethodsPerClass());
+                module.averageMethodsPerClass(),
+                module.averagePublicMethodsPerClass(),
+                lcom4,
+                shareOfGetterSetters,
+                shareOfMethodsWithLocalCalls);
     }
 
     public List<MetricsResult> computeMetrics() {

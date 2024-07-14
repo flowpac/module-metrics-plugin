@@ -35,9 +35,16 @@ public class ClassAnalyzer {
     private ClassDescriptor analyzeClass(File f) {
         try {
             ClassReader reader = new ClassReader(new FileInputStream(f));
-            return new DependencyAnalyzer().getDependentClasses(reader);
+            return analyze(reader);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public ClassDescriptor analyze(ClassReader reader) throws IOException {
+        var classes = new DependencyAnalyzer().analyze(reader);
+        var methods = new CohesionAnalyzer().analyze(reader);
+        classes.addMethods(methods);
+        return classes;
     }
 }

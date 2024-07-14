@@ -5,6 +5,7 @@ import org.assertj.core.data.Offset;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashSet;
 import java.util.Set;
 
 class ModulesTest {
@@ -55,6 +56,6 @@ class ModulesTest {
     }
 
     private ClassDescriptor createClassDescriptor(String name, Set<String> dependencies){
-        return new ClassDescriptor(name, false, Visibility.PUBLIC, 0, 0, dependencies);
+        return new ClassDescriptor(name, false, Visibility.PUBLIC, dependencies, new HashSet<>());
     }
 }

@@ -9,7 +9,6 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
@@ -18,7 +17,7 @@ import java.util.stream.Collectors;
 
 public class DependencyAnalyzer {
 
-    public ClassDescriptor getDependentClasses(ClassReader classReader) throws IOException {
+    public ClassDescriptor analyze(ClassReader classReader) {
         ClassNode classNode = new ClassNode();
         classReader.accept(classNode, 0);
         Set<String> dependentClasses = new HashSet<>();
@@ -44,32 +43,9 @@ public class DependencyAnalyzer {
 
         var ownName = transformClassName(classNode.name);
         dependentClasses.remove(ownName);
-        var visibility = extractVisibility(classNode);
-        var numOfMethods = countMethodsInClass(classNode);
-        var numOfPublicMethods = countPublicMethodsInClass(classNode);
-        return new ClassDescriptor(ownName, isAbstract(classNode), visibility, numOfMethods, numOfPublicMethods, dependentClasses);
-    }
+        var visibility = Visibility.parse(classNode.access);
 
-    private static int countPublicMethodsInClass(ClassNode classNode) {
-        return (int) classNode.methods.stream().filter(m -> (m.access & Opcodes.ACC_PUBLIC) != 0).count();
-    }
-
-    private static int countMethodsInClass(ClassNode classNode) {
-        return (int) classNode.methods.stream().filter(m -> !m.name.contains("<init>")).count();
-    }
-
-    private Visibility extractVisibility(ClassNode classNode) {
-        Visibility visibility;
-        if ((classNode.access & Opcodes.ACC_PUBLIC) != 0) {
-            visibility = Visibility.PUBLIC;
-        } else if ((classNode.access & Opcodes.ACC_PROTECTED) != 0) {
-            visibility = Visibility.PROTECTED;
-        } else if ((classNode.access & Opcodes.ACC_PRIVATE) != 0) {
-            visibility = Visibility.PRIVATE;
-        } else {
-            visibility = Visibility.DEFAULT;
-        }
-        return visibility;
+        return new ClassDescriptor(ownName, isAbstract(classNode), visibility, dependentClasses, new HashSet<>());
     }
 
     private Set<String> extractExceptionTypes(MethodNode method) {

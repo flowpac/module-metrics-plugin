@@ -36,6 +36,14 @@ public record ClassDescriptor(String className, boolean isAbstract, Visibility v
                 .count();
     }
 
+    public double averageLinesPerMethod(){
+        var lines = methods.stream()
+                .filter(Predicate.not(MethodDescriptor::isConstructor))
+                .map(MethodDescriptor::getLines)
+                .reduce(Integer::sum).orElse(0);
+        return methods.isEmpty() ?0d:(double) lines / (double) methods.size();
+    }
+
     public int countMethodsWithOnlyOneInvolvedField(){
         return (int) this.methods.stream()
                 .filter(MethodDescriptor::readOrModifyOneSingleField)

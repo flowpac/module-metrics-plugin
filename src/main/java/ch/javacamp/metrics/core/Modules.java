@@ -66,13 +66,12 @@ public class Modules {
         var lcom4 = module.averageLCOM4();
         var shareOfGetterSetters = module.shareOfGetterSetters();
         var shareOfMethodsWithLocalCalls = module.shareOfMethodsWithLocalCalls();
+        var linesPerMethod = module.averageLinesPerMethod();
 
         return new MetricsResult(module.name(), module.totalClasses(), ca, ce, a, i, d,
                 module.averageMethodsPerClass(),
                 module.averagePublicMethodsPerClass(),
-                lcom4,
-                shareOfGetterSetters,
-                shareOfMethodsWithLocalCalls);
+                lcom4, shareOfGetterSetters, shareOfMethodsWithLocalCalls, linesPerMethod);
     }
 
     public List<MetricsResult> computeMetrics() {

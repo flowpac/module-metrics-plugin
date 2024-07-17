@@ -1,6 +1,7 @@
 package ch.javacamp.metrics.core;
 
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public record ModuleDescriptor(String name, Set<ClassDescriptor> classes) {
@@ -47,6 +48,14 @@ public record ModuleDescriptor(String name, Set<ClassDescriptor> classes) {
     public double averagePublicMethodsPerClass() {
         var methods = classes.stream().map(ClassDescriptor::countPublicMethodsInClass).reduce(Integer::sum).orElse(0);
         return (double) methods / (double) totalClasses();
+    }
+
+    public double averageLinesPerMethod(){
+        return classes.stream()
+                .filter(Predicate.not(ClassDescriptor::isAbstract))
+                .map(ClassDescriptor::averageLinesPerMethod)
+                .reduce(Double::sum)
+                .orElse(0d) / classes.size();
     }
 
 

@@ -34,8 +34,6 @@ class LCOM4Calculator {
         return groups.size();
     }
 
-
-
     static class Group {
         Set<String> fields;
         Set<String> methods;

@@ -22,6 +22,7 @@ public class MethodDescriptor {
     private final Set<String> writtenFields;
     private final Set<String> readFields;
     private final Set<String> invokedLocalMethods;
+    private int lines;
 
     public MethodDescriptor(String fullName, String shortName, Visibility visibility, String name, String returnType, String parameters){
         this.fullName = fullName;
@@ -33,6 +34,7 @@ public class MethodDescriptor {
         this.writtenFields = new HashSet<>();
         this.readFields = new HashSet<>();
         this.invokedLocalMethods = new HashSet<>();
+        this.lines = 0;
     }
 
     public String getFullName() {
@@ -45,6 +47,10 @@ public class MethodDescriptor {
 
     public String getReturnType() {
         return returnType;
+    }
+
+    public int getLines() {
+        return lines;
     }
 
     public boolean isPublic(){
@@ -102,5 +108,9 @@ public class MethodDescriptor {
 
     public boolean isSpecialMethod(){
         return isConstructor() || SPECIAL_METHODS.contains(this.shortName);
+    }
+
+    public void incLineCounter() {
+        this.lines++;
     }
 }

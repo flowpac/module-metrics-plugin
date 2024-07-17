@@ -130,6 +130,10 @@
           <td class="name">Share of methods with local calls</td>
           <td class="value"></td>
         </tr>
+        <tr>
+          <td class="name">Lines per Method</td>
+          <td class="value"></td>
+        </tr>
       </table>
       <canvas id="" width="550" height="550"></canvas>
     </template>
@@ -173,6 +177,7 @@
         td[17].textContent = d.lcom4.toFixed(2);
         td[19].textContent = (d.shareGetterSetters * 100).toFixed(2) + "%";
         td[21].textContent = (d.shareLocalCallMethods * 100).toFixed(2) + "%";
+        td[23].textContent = d.linesPerMethod.toFixed(2);
 
         let title = clone.querySelectorAll('h2')
         title[0].textContent = d.name;

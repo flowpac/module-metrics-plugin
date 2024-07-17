@@ -3,6 +3,7 @@ package ch.javacamp.metrics.analyzer;
 import ch.javacamp.metrics.core.MethodDescriptor;
 import ch.javacamp.metrics.core.Visibility;
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -95,6 +96,11 @@ public class CohesionAnalyzer {
             if(this.owner.equals(owner)) {
                 method.addLocalMethodInvocation(generateShortMethodName(name, descriptor));
             }
+        }
+
+        @Override
+        public void visitLineNumber(int line, Label start) {
+            this.method.incLineCounter();
         }
 
         @Override

@@ -61,6 +61,13 @@ class CohesionAnalyzerTest {
         Assertions.assertThat(method.getInvokedLocalMethods()).containsExactlyInAnyOrder("getS():java.lang.String");
     }
 
+    @Test
+    @DisplayName("Check line numbers")
+    public void t8() throws Exception {
+        var method = create("bar(java.lang.String; int; int; java.lang.String):java.lang.Object");
+        Assertions.assertThat(method.getLines()).isEqualTo(3);
+    }
+
     private MethodDescriptor create(String name) throws Exception {
         var methods = create();
         return methods.stream().filter(x -> x.matches(name)).findAny().orElseThrow();

@@ -86,56 +86,16 @@
     <template id="module-block">
       <h2></h2>
       <table>
-        <tr>
-          <td class="name">Number of Classes</td>
-          <td class="value"></td>
-        </tr>
-        <tr>
-          <td class="name">Abstractness</td>
-          <td class="value"></td>
-        </tr>
-        <tr>
-          <td class="name">Afferent Couplings (Ca)</td>
-          <td class="value"></td>
-        </tr>
-        <tr>
-          <td class="name">Efferent Couplings (Ce)</td>
-          <td class="value"></td>
-        </tr>
-        <tr>
-          <td class="name">Instability</td>
-          <td class="value"></td>
-        </tr>
-        <tr>
-          <td class="name">Distance</td>
-          <td class="value"></td>
-        </tr>
-        <tr>
-          <td class="name">Average Methods per Class</td>
-          <td class="value"></td>
-        </tr>
-        <tr>
-          <td class="name">Average Public Methods per Class</td>
-          <td class="value"></td>
-        </tr>
-        <tr>
-          <td class="name">Average LCOM4</td>
-          <td class="value"></td>
-        </tr>
-        <tr>
-          <td class="name">Share of Getters/Setters</td>
-          <td class="value"></td>
-        </tr>
-        <tr>
-          <td class="name">Share of methods with local calls</td>
-          <td class="value"></td>
-        </tr>
-        <tr>
-          <td class="name">Lines per Method</td>
-          <td class="value"></td>
-        </tr>
+
       </table>
       <canvas id="" width="550" height="550"></canvas>
+    </template>
+
+    <template id="data-row">
+      <tr>
+        <td class="name">Lines per Method</td>
+        <td class="value"></td>
+      </tr>
     </template>
 
     <script>
@@ -162,25 +122,44 @@
 
       let data = ##data##;
 
+      function addDataRow(table, name, value){
+        const template = document.querySelector('#data-row')
+        const tr = template.content.cloneNode(true)
+        let td = tr.querySelectorAll('td')
+        td[0].textContent = name;
+        td[1].textContent = value;
+        table.appendChild(tr);
+      }
+
       data.forEach(d => {
         const template = document.querySelector('#module-block')
         const clone = template.content.cloneNode(true)
-        let td = clone.querySelectorAll('td')
-        td[1].textContent = d.numberOfClasses;
-        td[3].textContent = d.abstractness.toFixed(2);
-        td[5].textContent = d.ca.toFixed(0);
-        td[7].textContent = d.ce.toFixed(0);
-        td[9].textContent = d.instability.toFixed(2);
-        td[11].textContent = d.distance.toFixed(2);
-        td[13].textContent = d.averageMethodsPerClass.toFixed(2);
-        td[15].textContent = d.averagePublicMethodsPerClass.toFixed(2);
-        td[17].textContent = d.lcom4.toFixed(2);
-        td[19].textContent = (d.shareGetterSetters * 100).toFixed(2) + "%";
-        td[21].textContent = (d.shareLocalCallMethods * 100).toFixed(2) + "%";
-        td[23].textContent = d.linesPerMethod.toFixed(2);
 
         let title = clone.querySelectorAll('h2')
         title[0].textContent = d.name;
+
+        let table = clone.querySelectorAll('table')[0];
+
+        addDataRow(table, "Number of Classes", d.numberOfClasses);
+        addDataRow(table, "Abstractness", d.abstractness.toFixed(2));
+        addDataRow(table, "Afferent Couplings (Ca)", d.ca.toFixed(0));
+        addDataRow(table, "Efferent Couplings (Ce)", d.ce.toFixed(0));
+        addDataRow(table, "Instability", d.instability.toFixed(2));
+        addDataRow(table, "Distance", d.distance.toFixed(2));
+        addDataRow(table, "Average Methods per Class", d.averageMethodsPerClass.toFixed(2));
+        addDataRow(table, "Average Public Methods per Class", d.averagePublicMethodsPerClass.toFixed(2));
+        addDataRow(table, "Average LCOM4", d.lcom4.toFixed(2));
+        addDataRow(table, "Share of Getters/Setters", (d.shareGetterSetters * 100).toFixed(2) + "%");
+        addDataRow(table, "Share of methods with local calls", (d.shareLocalCallMethods * 100).toFixed(2) + "%");
+
+        addDataRow(table, "Mean Lines per Method", d.methodStatistics.mean.toFixed(2));
+        addDataRow(table, "Median Lines per Method", d.methodStatistics.median.toFixed(2));
+        addDataRow(table, "Percentile 25", d.methodStatistics.percentile25.toFixed(2));
+        addDataRow(table, "Percentile 75", d.methodStatistics.percentile75.toFixed(2));
+        addDataRow(table, "Percentile 80", d.methodStatistics.percentile80.toFixed(2));
+        addDataRow(table, "Percentile 90", d.methodStatistics.percentile90.toFixed(2));
+        addDataRow(table, "Percentile 95", d.methodStatistics.percentile95.toFixed(2));
+        addDataRow(table, "Percentile 99", d.methodStatistics.percentile99.toFixed(2));
 
         let canvas = clone.querySelectorAll('canvas')
         canvas[0].id = "c-"+d.name;

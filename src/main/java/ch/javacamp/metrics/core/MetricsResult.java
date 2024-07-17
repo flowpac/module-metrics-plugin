@@ -24,6 +24,15 @@ public class MetricsResult {
     private final double lcom4;
     private final double shareGetterSetters;
     private final double shareLocalCallMethods;
-    private final double linesPerMethod;
+    private final MethodStatistics methodStatistics;
+
+    @Builder
+    @Getter
+    @Accessors(fluent = true)
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    public static class MethodStatistics{
+        double mean, median, percentile25, percentile75, percentile80, percentile90, percentile95, percentile99;
+
+    }
 
 }

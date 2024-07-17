@@ -65,7 +65,7 @@ public class Modules {
         var lcom4 = module.averageLCOM4();
         var shareOfGetterSetters = module.shareOfGetterSetters();
         var shareOfMethodsWithLocalCalls = module.shareOfMethodsWithLocalCalls();
-        var linesPerMethod = module.averageLinesPerMethod();
+        var methodStatistics = computeMethodStatistics(module);
 
         return new MetricsResult.MetricsResultBuilder()
                 .numberOfClasses(module.totalClasses())
@@ -78,8 +78,21 @@ public class Modules {
                 .lcom4(lcom4)
                 .shareGetterSetters(shareOfGetterSetters)
                 .shareLocalCallMethods(shareOfMethodsWithLocalCalls)
-                .linesPerMethod(linesPerMethod)
+                .methodStatistics(methodStatistics)
                 .build();
+    }
+
+    private static MetricsResult.MethodStatistics computeMethodStatistics(ModuleDescriptor module) {
+        var lineCountResult = new LineCountCalculator().computeModule(module);
+        return MetricsResult.MethodStatistics.builder()
+                .median(lineCountResult.median())
+                .mean(lineCountResult.mean())
+                .percentile25(lineCountResult.percentile(25))
+                .percentile75(lineCountResult.percentile(75))
+                .percentile80(lineCountResult.percentile(80))
+                .percentile90(lineCountResult.percentile(90))
+                .percentile95(lineCountResult.percentile(95))
+                .percentile99(lineCountResult.percentile(99)).build();
     }
 
     public List<MetricsResult> computeMetrics() {

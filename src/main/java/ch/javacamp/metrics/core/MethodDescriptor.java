@@ -1,8 +1,15 @@
 package ch.javacamp.metrics.core;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.experimental.Accessors;
+
 import java.util.HashSet;
 import java.util.Set;
 
+@AllArgsConstructor
+@Getter
+@Accessors(fluent = true)
 public class MethodDescriptor {
 
     private final static Set<String> SPECIAL_METHODS;
@@ -37,32 +44,12 @@ public class MethodDescriptor {
         this.lines = 0;
     }
 
-    public String getFullName() {
-        return fullName;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getReturnType() {
-        return returnType;
-    }
-
-    public int getLines() {
-        return lines;
-    }
-
     public boolean isPublic(){
         return visibility == Visibility.PUBLIC;
     }
 
     public boolean isConstructor(){
         return this.name.contains("<init>") || this.name.contains("<clinit>");
-    }
-
-    public String getParameters() {
-        return parameters;
     }
 
     public void addFieldWrite(String name){
@@ -77,18 +64,6 @@ public class MethodDescriptor {
         this.invokedLocalMethods.add(methodName);
     }
 
-    public Set<String> getWrittenFields() {
-        return writtenFields;
-    }
-
-    public Set<String> getReadFields() {
-        return readFields;
-    }
-
-    public Set<String> getInvokedLocalMethods() {
-        return invokedLocalMethods;
-    }
-
     public boolean matches(String shortName){
         return this.shortName.equals(shortName);
     }
@@ -98,12 +73,8 @@ public class MethodDescriptor {
     }
 
     public boolean readOrModifyOneSingleField(){
-        Set<String> fields = Relation.combine(getReadFields(), getWrittenFields());
+        Set<String> fields = Relation.combine(readFields(), writtenFields());
         return fields.size() == 1;
-    }
-
-    public String getShortName() {
-        return shortName;
     }
 
     public boolean isSpecialMethod(){

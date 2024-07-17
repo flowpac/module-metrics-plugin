@@ -1,5 +1,7 @@
 package ch.javacamp.metrics.core;
 
+import lombok.Getter;
+
 import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -8,6 +10,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Singleton
+@Getter
 public class Modules {
 
     private final List<ModuleDescriptor> modules = new ArrayList<>();
@@ -16,10 +19,6 @@ public class Modules {
         if (moduleDescriptor.totalClasses() > 0) {
             this.modules.add(moduleDescriptor);
         }
-    }
-
-    public List<ModuleDescriptor> getModules() {
-        return modules;
     }
 
     public Set<ModuleDescriptor> otherModules(ModuleDescriptor toExclude) {
@@ -68,10 +67,19 @@ public class Modules {
         var shareOfMethodsWithLocalCalls = module.shareOfMethodsWithLocalCalls();
         var linesPerMethod = module.averageLinesPerMethod();
 
-        return new MetricsResult(module.name(), module.totalClasses(), ca, ce, a, i, d,
-                module.averageMethodsPerClass(),
-                module.averagePublicMethodsPerClass(),
-                lcom4, shareOfGetterSetters, shareOfMethodsWithLocalCalls, linesPerMethod);
+        return new MetricsResult.MetricsResultBuilder()
+                .numberOfClasses(module.totalClasses())
+                .name(module.name())
+                .ca(ca)
+                .ce(ce)
+                .instability(i)
+                .abstractness(a)
+                .distance(d)
+                .lcom4(lcom4)
+                .shareGetterSetters(shareOfGetterSetters)
+                .shareLocalCallMethods(shareOfMethodsWithLocalCalls)
+                .linesPerMethod(linesPerMethod)
+                .build();
     }
 
     public List<MetricsResult> computeMetrics() {

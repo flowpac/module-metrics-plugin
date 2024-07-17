@@ -16,56 +16,56 @@ class CohesionAnalyzerTest {
     @DisplayName("Check full method name.")
     public void t1() throws Exception {
         var method = create("setL():void");
-        Assertions.assertThat(method.getFullName()).isEqualTo("public void setL()");
+        Assertions.assertThat(method.fullName()).isEqualTo("public void setL()");
     }
 
     @Test
     @DisplayName("Check return type.")
     public void t2() throws Exception {
         var method = create("setL():void");
-        Assertions.assertThat(method.getReturnType()).isEqualTo("void");
+        Assertions.assertThat(method.returnType()).isEqualTo("void");
     }
 
     @Test
     @DisplayName("Check empty parameter type.")
     public void t3() throws Exception {
         var method = create("setL():void");
-        Assertions.assertThat(method.getParameters()).isEqualTo("");
+        Assertions.assertThat(method.parameters()).isEqualTo("");
     }
 
     @Test
     @DisplayName("Check parameter type.")
     public void t4() throws Exception {
         var method = create("bar(java.lang.String; int; int; java.lang.String):java.lang.Object");
-        Assertions.assertThat(method.getParameters()).isEqualTo("java.lang.String; int; int; java.lang.String");
+        Assertions.assertThat(method.parameters()).isEqualTo("java.lang.String; int; int; java.lang.String");
     }
 
     @Test
     @DisplayName("Check written fields.")
     public void t5() throws Exception {
         var method = create("bar(java.lang.String; int; int; java.lang.String):java.lang.Object");
-        Assertions.assertThat(method.getWrittenFields()).containsExactlyInAnyOrder("i", "s");
+        Assertions.assertThat(method.writtenFields()).containsExactlyInAnyOrder("i", "s");
     }
 
     @Test
     @DisplayName("Check read fields.")
     public void t6() throws Exception {
         var method = create("getS():java.lang.String");
-        Assertions.assertThat(method.getReadFields()).containsExactlyInAnyOrder("s");
+        Assertions.assertThat(method.readFields()).containsExactlyInAnyOrder("s");
     }
 
     @Test
     @DisplayName("Check invoked local methods.")
     public void t7() throws Exception {
         var method = create("getDelegatedS():java.lang.String");
-        Assertions.assertThat(method.getInvokedLocalMethods()).containsExactlyInAnyOrder("getS():java.lang.String");
+        Assertions.assertThat(method.invokedLocalMethods()).containsExactlyInAnyOrder("getS():java.lang.String");
     }
 
     @Test
     @DisplayName("Check line numbers")
     public void t8() throws Exception {
         var method = create("bar(java.lang.String; int; int; java.lang.String):java.lang.Object");
-        Assertions.assertThat(method.getLines()).isEqualTo(3);
+        Assertions.assertThat(method.lines()).isEqualTo(3);
     }
 
     private MethodDescriptor create(String name) throws Exception {

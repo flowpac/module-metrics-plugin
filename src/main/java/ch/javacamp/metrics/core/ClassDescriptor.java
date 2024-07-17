@@ -39,7 +39,7 @@ public record ClassDescriptor(String className, boolean isAbstract, Visibility v
     public double averageLinesPerMethod(){
         var lines = methods.stream()
                 .filter(Predicate.not(MethodDescriptor::isConstructor))
-                .map(MethodDescriptor::getLines)
+                .map(MethodDescriptor::lines)
                 .reduce(Integer::sum).orElse(0);
         return methods.isEmpty() ?0d:(double) lines / (double) methods.size();
     }

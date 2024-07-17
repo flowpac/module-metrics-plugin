@@ -34,6 +34,7 @@ class ModulesTest {
         modules.addModule(modC);
 
         var metricsA = modules.computeMetrics(modA);
+        Assertions.assertThat(metricsA.name()).isEqualTo("mod-a");
         Assertions.assertThat(metricsA.numberOfClasses()).isEqualTo(3);
         Assertions.assertThat(metricsA.ca()).isEqualTo(4);
         Assertions.assertThat(metricsA.ce()).isEqualTo(2);

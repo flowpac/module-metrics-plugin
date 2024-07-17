@@ -11,8 +11,8 @@ class LCOM4Calculator {
         Set<Group> groups = new HashSet<>();
 
         for(var method:methodDescriptors){
-            var methodNames = Relation.combine(Set.of(method.getShortName()), method.getInvokedLocalMethods());
-            var fieldNames = Relation.combine(method.getReadFields(), method.getWrittenFields());
+            var methodNames = Relation.combine(Set.of(method.shortName()), method.invokedLocalMethods());
+            var fieldNames = Relation.combine(method.readFields(), method.writtenFields());
             groups.add(Group.create(fieldNames, methodNames));
         }
 

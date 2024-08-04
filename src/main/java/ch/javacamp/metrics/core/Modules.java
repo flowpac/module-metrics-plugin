@@ -97,7 +97,7 @@ public class Modules {
 
     public List<MetricsResult> computeMetrics() {
         List<MetricsResult> result = new ArrayList<>();
-        new CallFlowCalculator().calculate(modules);
+        // new CallFlowCalculator().calculate(modules);
         for (ModuleDescriptor currentModule : getModules()) {
             result.add(computeMetrics(currentModule));
         }

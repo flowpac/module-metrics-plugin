@@ -25,7 +25,7 @@ public class Modules {
         return modules.stream().filter(x -> x != toExclude).collect(Collectors.toSet());
     }
 
-    public Set<ClassDescriptor> externalClassesUsingClassesInThisModule(ModuleDescriptor module) {
+    private Set<ClassDescriptor> externalClassesUsingClassesInThisModule(ModuleDescriptor module) {
         var classNamesCurrentModule = module.allClassNames();
         var otherModules = otherModules(module);
 
@@ -36,7 +36,7 @@ public class Modules {
                 .collect(Collectors.toSet());
     }
 
-    public Set<ClassDescriptor> externalClassesUsedByThisModule(ModuleDescriptor module) {
+    private Set<ClassDescriptor> externalClassesUsedByThisModule(ModuleDescriptor module) {
         Set<ClassDescriptor> result = new HashSet<>();
         var allClassNamesOutsideCurrentModule = otherModules(module).stream()
                 .flatMap(x -> x.classes().stream())
@@ -97,6 +97,7 @@ public class Modules {
 
     public List<MetricsResult> computeMetrics() {
         List<MetricsResult> result = new ArrayList<>();
+        new CallFlowCalculator().calculate(modules);
         for (ModuleDescriptor currentModule : getModules()) {
             result.add(computeMetrics(currentModule));
         }

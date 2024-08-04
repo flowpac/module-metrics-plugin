@@ -1,6 +1,7 @@
 package ch.javacamp.metrics.analyzer;
 
 import ch.javacamp.metrics.core.MethodDescriptor;
+import ch.javacamp.metrics.core.MethodInvocation;
 import ch.javacamp.metrics.core.Visibility;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Label;
@@ -33,7 +34,9 @@ public class CohesionAnalyzer {
         Map<String, MethodDescriptor> methods = new HashMap<>();
         for(MethodNode methodNode:classNode.methods){
             var shortName = generateShortMethodName(methodNode);
-            var method = methods.computeIfAbsent(shortName, ignored -> new MethodDescriptor(generateFullMethodSignature(methodNode),
+            var method = methods.computeIfAbsent(shortName, ignored -> new MethodDescriptor(
+                    AsmUtils.transformClassName(classNode.name),
+                    generateFullMethodSignature(methodNode),
                     generateShortMethodName(methodNode),
                     Visibility.parse(methodNode.access),
                     methodNode.name,
@@ -68,7 +71,9 @@ public class CohesionAnalyzer {
     }
 
     private static String getParameterTypes(String descriptor) {
-        return String.join("; ", Arrays.stream(Type.getMethodType(descriptor).getArgumentTypes()).map(Type::getClassName).toList());
+        return String.join("; ", Arrays
+                .stream(Type.getMethodType(descriptor).getArgumentTypes())
+                .map(Type::getClassName).toList());
     }
 
     private static class CohesionMethodAnalyzer extends MethodVisitor {
@@ -96,6 +101,12 @@ public class CohesionAnalyzer {
             if(this.owner.equals(owner)) {
                 method.addLocalMethodInvocation(generateShortMethodName(name, descriptor));
             }
+
+            method.addMethodCall(MethodInvocation.builder()
+                    .clazz(AsmUtils.transformClassName(owner))
+                    .isLocal(this.owner.equals(owner))
+                    .shortName(generateShortMethodName(name, descriptor))
+                    .build());
         }
 
         @Override

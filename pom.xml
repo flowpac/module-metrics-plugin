@@ -4,7 +4,7 @@
 
     <groupId>ch.javacamp.metrics</groupId>
     <artifactId>module-metrics-plugin</artifactId>
-    <version>0.3.2</version>
+    <version>0.3.3-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>Module OOP Metrics Maven Plugin</name>

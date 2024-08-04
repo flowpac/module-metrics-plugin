@@ -15,6 +15,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static ch.javacamp.metrics.analyzer.AsmUtils.*;
+
 public class DependencyAnalyzer {
 
     public ClassDescriptor analyze(ClassReader classReader) {
@@ -53,7 +55,7 @@ public class DependencyAnalyzer {
             return Set.of();
         }
         return method.exceptions.stream()
-                .map(this::transformClassName)
+                .map(AsmUtils::transformClassName)
                 .collect(Collectors.toSet());
     }
 
@@ -133,8 +135,5 @@ public class DependencyAnalyzer {
         return isAbstractClass || isInterface;
     }
 
-    private String transformClassName(String c) {
-        return c.replace("/", ".");
-    }
 
 }

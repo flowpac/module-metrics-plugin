@@ -4,7 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @AllArgsConstructor
@@ -21,6 +23,7 @@ public class MethodDescriptor {
         );
     }
     private final String fullName;
+    private final String owner;
     private final String shortName;
     private final String name;
     private final String returnType;
@@ -29,18 +32,21 @@ public class MethodDescriptor {
     private final Set<String> writtenFields;
     private final Set<String> readFields;
     private final Set<String> invokedLocalMethods;
+    private final List<MethodInvocation> invokedMethods;
     private int lines;
 
-    public MethodDescriptor(String fullName, String shortName, Visibility visibility, String name, String returnType, String parameters){
+    public MethodDescriptor(String owner, String fullName, String shortName, Visibility visibility, String name, String returnType, String parameters){
         this.fullName = fullName;
         this.shortName = shortName;
         this.visibility = visibility;
         this.name = name;
+        this.owner = owner;
         this.returnType = returnType;
         this.parameters = parameters;
         this.writtenFields = new HashSet<>();
         this.readFields = new HashSet<>();
         this.invokedLocalMethods = new HashSet<>();
+        this.invokedMethods = new ArrayList<>();
         this.lines = 0;
     }
 
@@ -72,6 +78,10 @@ public class MethodDescriptor {
         return !this.invokedLocalMethods.isEmpty();
     }
 
+    public void addMethodCall(MethodInvocation methodInvocation){
+        this.invokedMethods.add(methodInvocation);
+    }
+
     public boolean readOrModifyOneSingleField(){
         Set<String> fields = Relation.combine(readFields(), writtenFields());
         return fields.size() == 1;
@@ -84,4 +94,9 @@ public class MethodDescriptor {
     public void incLineCounter() {
         this.lines++;
     }
+
+    public String fqn(){
+        return String.format("%s#%s", this.owner, this.shortName);
+    }
+
 }

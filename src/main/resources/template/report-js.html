@@ -24,54 +24,59 @@
   </head>
   <body>
     <script>
-      function drawDiagram(name, abstractness, instability) {
+      function drawDiagram(name) {
+        const canvas = document.getElementById(name);
+        const ctx = canvas.getContext('2d');
+
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(50, 50);
+        ctx.lineTo(50, 500);
+        ctx.lineTo(500, 500);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(450, 500);
+        ctx.lineTo(50, 100);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.lineWidth = 5;
+        ctx.arc(50, 100, 3, 0 * Math.PI, 2 * Math.PI);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.lineWidth = 5;
+        ctx.arc(450, 500, 3, 0 * Math.PI, 2 * Math.PI);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.lineWidth = 2;
+        ctx.arc(50, 500, 200, 1.5 * Math.PI, 2 * Math.PI);
+        ctx.stroke();
+
+        ctx.font = '22px serif';
+        ctx.fillText('Instability', 230, 520);
+        ctx.save();
+
+        ctx.font = '22px serif';
+        ctx.fillText('Zone of Pain', 70, 450);
+        ctx.save();
+
+        ctx.rotate(-Math.PI / 2);
+        ctx.font = '22px serif';
+        ctx.fillText('Abstractness', -350, 40);
+        ctx.restore();
+
+        ctx.font = '15px serif';
+        ctx.fillText('(0,1)', 10, 100);
+        ctx.fillText('(1,0)', 450, 520);
+
+      }
+
+      function drawComponent(name, abstractness, instability) {
         const canvas = document.getElementById(name)
         const ctx = canvas.getContext('2d')
-
-        ctx.lineWidth = 2
-        ctx.beginPath()
-        ctx.moveTo(50, 50)
-        ctx.lineTo(50, 500)
-        ctx.lineTo(500, 500)
-        ctx.stroke()
-
-        ctx.beginPath()
-        ctx.moveTo(450, 500)
-        ctx.lineTo(50, 100)
-        ctx.stroke()
-
-        ctx.beginPath()
-        ctx.lineWidth = 5
-        ctx.arc(50, 100, 3, 0 * Math.PI, 2 * Math.PI)
-        ctx.stroke()
-
-        ctx.beginPath()
-        ctx.lineWidth = 5
-        ctx.arc(450, 500, 3, 0 * Math.PI, 2 * Math.PI)
-        ctx.stroke()
-
-        ctx.beginPath()
-        ctx.lineWidth = 2
-        ctx.arc(50, 500, 200, 1.5 * Math.PI, 2 * Math.PI)
-        ctx.stroke()
-
-        ctx.font = '22px serif'
-        ctx.fillText('Instability', 230, 520)
-        ctx.save()
-
-        ctx.font = '22px serif'
-        ctx.fillText('Zone of Pain', 70, 450)
-        ctx.save()
-
-        ctx.rotate(-Math.PI / 2)
-        ctx.font = '22px serif'
-        ctx.fillText('Abstractness', -350, 40)
-        ctx.restore()
-
-        ctx.font = '15px serif'
-        ctx.fillText('(0,1)', 10, 100)
-        ctx.fillText('(1,0)', 450, 520)
-
         ctx.beginPath()
         ctx.strokeStyle = 'red'
         ctx.arc(
@@ -81,7 +86,8 @@
           0,
           2 * Math.PI
         )
-        ctx.stroke()
+        ctx.stroke();
+
       }
     </script>
 
@@ -101,6 +107,9 @@
         <td class="value"></td>
       </tr>
     </template>
+
+    <h2>Summary</h2>
+    <canvas id="summary-diagram" width="550" height="550"></canvas>
 
     <script>
       let testdata = [
@@ -168,9 +177,15 @@
         let canvas = clone.querySelectorAll('canvas')
         canvas[0].id = "c-"+d.name;
         template.parentElement.appendChild(clone);
-        drawDiagram(canvas[0].id, d.abstractness, d.instability);
-
+        drawDiagram(canvas[0].id);
+        drawComponent(canvas[0].id, d.abstractness, d.instability);
       });
+
+      drawDiagram("summary-diagram");
+      data.forEach(d => {
+        drawComponent("summary-diagram", d.abstractness, d.instability);
+      });
+
     </script>
   </body>
 </html>

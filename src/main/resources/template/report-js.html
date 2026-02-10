@@ -167,12 +167,12 @@
 
         addDataRow(table, "Mean Lines per Method", d.methodStatistics.mean.toFixed(2));
         addDataRow(table, "Median Lines per Method", d.methodStatistics.median.toFixed(2));
-        addDataRow(table, "Percentile 25", d.methodStatistics.percentile25.toFixed(2));
-        addDataRow(table, "Percentile 75", d.methodStatistics.percentile75.toFixed(2));
-        addDataRow(table, "Percentile 80", d.methodStatistics.percentile80.toFixed(2));
-        addDataRow(table, "Percentile 90", d.methodStatistics.percentile90.toFixed(2));
-        addDataRow(table, "Percentile 95", d.methodStatistics.percentile95.toFixed(2));
-        addDataRow(table, "Percentile 99", d.methodStatistics.percentile99.toFixed(2));
+        addDataRow(table, "Lines per Method Percentile 25", d.methodStatistics.percentile25.toFixed(2));
+        addDataRow(table, "Lines per Method Percentile 75", d.methodStatistics.percentile75.toFixed(2));
+        addDataRow(table, "Lines per Method Percentile 80", d.methodStatistics.percentile80.toFixed(2));
+        addDataRow(table, "Lines per Method Percentile 90", d.methodStatistics.percentile90.toFixed(2));
+        addDataRow(table, "Lines per Method Percentile 95", d.methodStatistics.percentile95.toFixed(2));
+        addDataRow(table, "Lines per Method Percentile 99", d.methodStatistics.percentile99.toFixed(2));
 
         let canvas = clone.querySelectorAll('canvas')
         canvas[0].id = "c-"+d.name;

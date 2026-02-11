@@ -76,6 +76,8 @@ public class Modules {
                 .abstractness(a)
                 .distance(d)
                 .lcom4(lcom4)
+                .averageMethodsPerClass(module.averageMethodsPerClass())
+                .averagePublicMethodsPerClass(module.averagePublicMethodsPerClass())
                 .shareGetterSetters(shareOfGetterSetters)
                 .shareLocalCallMethods(shareOfMethodsWithLocalCalls)
                 .methodStatistics(methodStatistics)

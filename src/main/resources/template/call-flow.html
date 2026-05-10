@@ -36,6 +36,9 @@
       .sidebar-search { padding:0.5rem; border-bottom:1px solid var(--border); }
       .sidebar-search input { width:100%; padding:0.4rem 0.6rem; border:1px solid var(--border); border-radius:6px; font-size:0.8rem; outline:none; }
       .sidebar-search input:focus { border-color:var(--accent); }
+      .sidebar-filter { padding:0.4rem 0.5rem; border-bottom:1px solid var(--border); display:flex; gap:0.3rem; align-items:center; }
+      .sidebar-filter label { font-size:0.7rem; color:var(--text-secondary); cursor:pointer; user-select:none; }
+      .sidebar-filter input[type=checkbox] { margin:0; }
 
       .nav-section { padding:0.5rem 0.75rem 0.2rem; font-size:0.6rem; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-secondary); cursor:pointer; user-select:none; }
       .nav-section:hover { color:var(--accent); }
@@ -65,41 +68,65 @@
       .main-header h2 { font-size:1.15rem; font-weight:700; }
       .container { padding:1.5rem; overflow-x:auto; }
 
+      /* Toolbar */
+      .toolbar { display:flex; gap:0.5rem; margin-bottom:1rem; align-items:center; flex-wrap:wrap; }
+      .toolbar-btn { padding:0.3rem 0.7rem; font-size:0.75rem; font-weight:600; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text-secondary); cursor:pointer; transition:all 0.15s; }
+      .toolbar-btn:hover { background:var(--accent-light); color:var(--accent); border-color:var(--accent); }
+      .toolbar-sep { width:1px; height:20px; background:var(--border); }
+
+      /* Legend */
+      .legend { display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center; padding:0.5rem 0; }
+      .legend-item { display:flex; align-items:center; gap:0.3rem; font-size:0.7rem; color:var(--text-secondary); }
+      .legend-swatch { width:12px; height:12px; border-radius:999px; }
+
       /* Flow tree */
       .flow-placeholder { text-align:center; padding:4rem 2rem; color:var(--text-secondary); font-size:0.9rem; }
       .flow-placeholder .icon { font-size:2.5rem; margin-bottom:0.5rem; }
 
-      .flow-tree { position:relative; padding:1rem 0; }
+      .flow-tree { position:relative; padding:0.5rem 0; }
       .flow-node { position:relative; margin-left:28px; }
       .flow-node::before { content:''; position:absolute; left:-18px; top:0; bottom:0; width:2px; background:var(--border); }
       .flow-node:last-child::before { height:20px; }
-      .flow-node::after { content:''; position:absolute; left:-18px; top:20px; width:16px; height:2px; background:var(--border); }
+      .flow-node::after { content:''; position:absolute; left:-18px; top:19px; width:16px; height:2px; background:var(--border); }
 
-      .flow-card { display:inline-flex; align-items:center; gap:0.4rem; padding:0.35rem 0.7rem; margin:0.25rem 0; border-radius:8px; border:1.5px solid var(--border); background:var(--surface); font-size:0.78rem; box-shadow:0 1px 2px rgba(0,0,0,0.04); cursor:default; max-width:700px; transition:border-color 0.15s; }
+      .flow-row { display:flex; align-items:center; gap:0; margin:0.2rem 0; }
+      .flow-toggle { width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; font-size:0.6rem; color:var(--text-secondary); cursor:pointer; border-radius:4px; flex-shrink:0; user-select:none; border:none; background:none; }
+      .flow-toggle:hover { background:var(--accent-light); color:var(--accent); }
+      .flow-toggle.leaf { visibility:hidden; }
+
+      .flow-card { display:inline-flex; align-items:center; gap:0.4rem; padding:0.3rem 0.65rem; border-radius:8px; border:1.5px solid var(--border); background:var(--surface); font-size:0.78rem; box-shadow:0 1px 2px rgba(0,0,0,0.04); cursor:default; max-width:700px; transition:border-color 0.15s, opacity 0.15s; }
       .flow-card:hover { border-color:var(--accent); }
       .flow-card.root { border-color:var(--accent); background:var(--accent); color:white; font-weight:600; }
       .flow-card.root .mod-badge { background:rgba(255,255,255,0.2); color:white; }
       .flow-card.root .cls-name { color:rgba(255,255,255,0.85); }
       .flow-card.cycle { border-color:var(--red); border-style:dashed; opacity:0.7; }
+      .flow-card.dedup { border-color:var(--cyan); border-style:dotted; opacity:0.7; }
       .flow-card.interface-node { border-color:var(--purple); background:var(--purple-bg); }
       .flow-card.clickable { cursor:pointer; }
       .flow-card.clickable:hover { box-shadow:0 2px 8px rgba(79,70,229,0.15); }
 
       .mod-badge { font-size:0.6rem; font-weight:600; padding:0.1rem 0.4rem; border-radius:999px; white-space:nowrap; }
-      .cls-name { font-size:0.7rem; color:var(--text-secondary); margin-right:0.2rem; }
-      .method-name { font-family:monospace; font-size:0.75rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .cls-name { font-size:0.7rem; color:var(--text-secondary); margin-right:0.1rem; }
+      .method-name { font-family:'SF Mono',SFMono-Regular,Menlo,Monaco,Consolas,monospace; font-size:0.73rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .method-name .ret-type { color:var(--text-secondary); font-weight:400; opacity:0.7; }
       .cycle-label { font-size:0.6rem; color:var(--red); font-weight:600; margin-left:0.3rem; }
+      .dedup-label { font-size:0.6rem; color:var(--cyan); font-weight:600; margin-left:0.3rem; cursor:pointer; }
+      .dedup-label:hover { text-decoration:underline; }
       .interface-label { font-size:0.6rem; color:var(--purple); font-weight:600; margin-left:0.3rem; }
+      .child-count { font-size:0.55rem; color:var(--text-secondary); background:var(--surface-alt); border-radius:999px; padding:0 0.35rem; margin-left:0.2rem; font-weight:600; }
+
+      .flow-children { overflow:hidden; }
+      .flow-children.collapsed { display:none; }
 
       .impl-group { margin-left:28px; border-left:2px dashed var(--purple); padding-left:16px; margin-top:0.15rem; margin-bottom:0.3rem; }
       .impl-header { font-size:0.65rem; color:var(--purple); font-weight:600; text-transform:uppercase; letter-spacing:0.05em; padding:0.2rem 0; }
 
-      .flow-stats { display:flex; gap:1rem; margin-bottom:1rem; flex-wrap:wrap; }
-      .flow-stat { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:0.5rem 0.75rem; font-size:0.78rem; }
-      .flow-stat .label { font-size:0.65rem; color:var(--text-secondary); text-transform:uppercase; font-weight:600; }
-      .flow-stat .value { font-size:1.1rem; font-weight:700; color:var(--accent); }
+      .flow-stats { display:flex; gap:0.75rem; margin-bottom:0.75rem; flex-wrap:wrap; }
+      .flow-stat { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:0.4rem 0.65rem; font-size:0.78rem; }
+      .flow-stat .label { font-size:0.6rem; color:var(--text-secondary); text-transform:uppercase; font-weight:600; }
+      .flow-stat .value { font-size:1rem; font-weight:700; color:var(--accent); }
 
-      .depth-limit-note { font-size:0.75rem; color:var(--yellow); background:var(--yellow-bg); padding:0.3rem 0.6rem; border-radius:6px; display:inline-block; margin-top:0.2rem; }
+      .depth-limit-note { font-size:0.7rem; color:var(--yellow); background:var(--yellow-bg); padding:0.2rem 0.5rem; border-radius:6px; display:inline-block; margin:0.2rem 0; }
 
       @media (max-width:900px) { .sidebar { display:none; } .main { margin-left:0; } }
     </style>
@@ -123,6 +150,8 @@
     <script>
       var data = ##data##;
       var MAX_DEPTH = 20;
+      var INITIAL_EXPAND_DEPTH = 3;
+      var nodeIdCounter = 0;
 
       var MODULE_COLORS = [
         {bg:'#e0e7ff',fg:'#4f46e5'},{bg:'#cffafe',fg:'#0891b2'},
@@ -134,21 +163,38 @@
       var moduleColorMap = {};
       (data.modules || []).forEach(function(m,i){ moduleColorMap[m.name] = MODULE_COLORS[i % MODULE_COLORS.length]; });
 
+      // Pre-build class→module lookup
+      var classModuleCache = {};
+      (data.modules || []).forEach(function(mod) {
+        mod.classes.forEach(function(cls) { classModuleCache[cls.className] = mod.name; });
+      });
+
       function modBadge(modName) {
         var c = moduleColorMap[modName] || {bg:'#f0f2f5',fg:'#64748b'};
         return '<span class="mod-badge" style="background:'+c.bg+';color:'+c.fg+';">'+esc(modName)+'</span>';
       }
       function esc(s) { var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
       function shortMethod(s) {
-        // shorten param types: keep only simple names
         return s.replace(/[a-z_][a-z0-9_]*\./gi, '');
       }
+      function fmtMethod(shortName) {
+        // Split "name(params):ReturnType" into styled parts
+        var m = shortName.match(/^(.+?\(.*?\)):(.+)$/);
+        if (m) {
+          return esc(shortMethod(m[1])) + '<span class="ret-type">:' + esc(shortMethod(m[2])) + '</span>';
+        }
+        return esc(shortMethod(shortName));
+      }
+      function findModule(className) { return classModuleCache[className] || null; }
+      function simpleName(fqn) { var d=fqn.lastIndexOf('.'); return d>=0?fqn.substring(d+1):fqn; }
+      function escAttr(s) { return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
 
       // --- Build sidebar ---
       var sb = document.getElementById('sidebar');
       var html = '<div class="sidebar-header"><h1>🔀 Call Flow</h1><p>Method Call Flow Explorer</p></div>';
       html += '<div class="sidebar-links"><a href="oo-metrics-report.html">📊 Metrics</a><a href="module-dependencies.html">📈 Dependencies</a></div>';
       html += '<div class="sidebar-search"><input type="text" id="search-input" placeholder="Search methods..."></div>';
+      html += '<div class="sidebar-filter"><input type="checkbox" id="filter-public"><label for="filter-public">Only public methods</label></div>';
 
       (data.modules || []).forEach(function(mod, mi) {
         html += '<div class="nav-section" data-group="g'+mi+'" onclick="toggleGroup(this)">'+esc(mod.name)+' ('+mod.classes.length+')</div>';
@@ -158,7 +204,7 @@
           html += '<div class="nav-class'+(cls.isAbstract?' abstract':'')+'" data-methods="'+cid+'" onclick="toggleClass(this)" title="'+esc(cls.className)+'">'+esc(cls.simpleName)+'</div>';
           html += '<div class="nav-methods" id="'+cid+'">';
           cls.methods.forEach(function(m) {
-            html += '<button class="nav-method" data-fqn="'+esc(m.fqn)+'" onclick="selectMethod(this)" title="'+esc(m.fqn)+'">';
+            html += '<button class="nav-method" data-fqn="'+esc(m.fqn)+'" data-vis="'+m.visibility+'" onclick="selectMethod(this)" title="'+esc(m.fqn)+'">';
             html += '<span class="vis vis-'+m.visibility+'">'+m.visibility.charAt(0)+'</span> ';
             html += esc(shortMethod(m.shortName));
             html += '</button>';
@@ -181,12 +227,14 @@
         if(m) m.classList.toggle('open');
       }
 
-      // --- Search ---
-      document.getElementById('search-input').addEventListener('input', function(e) {
-        var q = e.target.value.toLowerCase();
+      // --- Search & filter ---
+      function applyFilter() {
+        var q = document.getElementById('search-input').value.toLowerCase();
+        var pubOnly = document.getElementById('filter-public').checked;
         document.querySelectorAll('.nav-method').forEach(function(btn) {
-          var match = !q || btn.dataset.fqn.toLowerCase().indexOf(q) >= 0;
-          btn.style.display = match ? '' : 'none';
+          var matchText = !q || btn.dataset.fqn.toLowerCase().indexOf(q) >= 0;
+          var matchVis = !pubOnly || btn.dataset.vis === 'PUBLIC';
+          btn.style.display = (matchText && matchVis) ? '' : 'none';
         });
         if(q) {
           document.querySelectorAll('.nav-section').forEach(function(s){ s.classList.add('open'); });
@@ -194,7 +242,9 @@
           document.querySelectorAll('.nav-class').forEach(function(c){ c.classList.add('open'); });
           document.querySelectorAll('.nav-methods').forEach(function(m){ m.classList.add('open'); });
         }
-      });
+      }
+      document.getElementById('search-input').addEventListener('input', applyFilter);
+      document.getElementById('filter-public').addEventListener('change', applyFilter);
 
       // --- Select method & render flow ---
       var activeBtn = null;
@@ -202,21 +252,17 @@
         if(activeBtn) activeBtn.classList.remove('active');
         btn.classList.add('active');
         activeBtn = btn;
-        var fqn = btn.dataset.fqn;
-        renderFlow(fqn);
+        renderFlow(btn.dataset.fqn);
       }
 
-      // Allow clicking flow nodes to navigate
       function selectMethodByFqn(fqn) {
         var btn = document.querySelector('.nav-method[data-fqn="'+CSS.escape(fqn)+'"]');
         if(btn) {
-          // Open parent groups
           var p = btn.parentElement;
           while(p && p !== sb) {
             if(p.classList.contains('nav-group') || p.classList.contains('nav-methods')) p.classList.add('open');
-            if(p.previousElementSibling && (p.previousElementSibling.classList.contains('nav-section') || p.previousElementSibling.classList.contains('nav-class'))) {
+            if(p.previousElementSibling && (p.previousElementSibling.classList.contains('nav-section') || p.previousElementSibling.classList.contains('nav-class')))
               p.previousElementSibling.classList.add('open');
-            }
             p = p.parentElement;
           }
           selectMethod(btn);
@@ -224,32 +270,99 @@
         }
       }
 
+      // --- Toggle subtree ---
+      function toggleNode(id) {
+        var children = document.getElementById('ch-'+id);
+        var toggle = document.getElementById('tg-'+id);
+        if(!children || !toggle) return;
+        var collapsed = children.classList.toggle('collapsed');
+        toggle.textContent = collapsed ? '▶' : '▼';
+      }
+
+      function expandAll() {
+        document.querySelectorAll('.flow-children').forEach(function(el){ el.classList.remove('collapsed'); });
+        document.querySelectorAll('.flow-toggle:not(.leaf)').forEach(function(el){ el.textContent='▼'; });
+      }
+      function collapseAll() {
+        document.querySelectorAll('.flow-children').forEach(function(el){ el.classList.add('collapsed'); });
+        document.querySelectorAll('.flow-toggle:not(.leaf)').forEach(function(el){ el.textContent='▶'; });
+        // Always keep root expanded
+        var first = document.querySelector('.flow-children');
+        var firstTg = document.querySelector('.flow-toggle:not(.leaf)');
+        if(first) first.classList.remove('collapsed');
+        if(firstTg) firstTg.textContent = '▼';
+      }
+      function expandToDepth(n) {
+        document.querySelectorAll('.flow-children').forEach(function(el){
+          var d = parseInt(el.dataset.depth||'0');
+          if(d < n) { el.classList.remove('collapsed'); }
+          else { el.classList.add('collapsed'); }
+        });
+        document.querySelectorAll('.flow-toggle:not(.leaf)').forEach(function(el){
+          var d = parseInt(el.dataset.depth||'0');
+          el.textContent = d < n ? '▼' : '▶';
+        });
+      }
+
+      // --- Render flow ---
       function renderFlow(fqn) {
         var parts = fqn.split('#');
         var className = parts[0] || '';
         var methodShort = parts[1] || '';
         document.getElementById('page-title').textContent = shortMethod(methodShort) + ' — ' + simpleName(className);
 
+        nodeIdCounter = 0;
         var visited = {};
-        var stats = { nodes:0, depth:0, modules:{}, classes:{}, cycles:0 };
-        var treeHtml = buildFlowTree(fqn, 0, visited, stats, true);
+        var expanded = {}; // track first-expansion for dedup
+        var stats = { nodes:0, depth:0, modules:{}, classes:{}, cycles:0, dedups:0 };
+        var treeHtml = buildFlowTree(fqn, 0, visited, expanded, stats, true);
 
-        var statsHtml = '<div class="flow-stats">';
-        statsHtml += '<div class="flow-stat"><div class="label">Calls</div><div class="value">'+stats.nodes+'</div></div>';
-        statsHtml += '<div class="flow-stat"><div class="label">Max Depth</div><div class="value">'+stats.depth+'</div></div>';
-        statsHtml += '<div class="flow-stat"><div class="label">Modules</div><div class="value">'+Object.keys(stats.modules).length+'</div></div>';
-        statsHtml += '<div class="flow-stat"><div class="label">Classes</div><div class="value">'+Object.keys(stats.classes).length+'</div></div>';
-        if(stats.cycles > 0) statsHtml += '<div class="flow-stat"><div class="label">Cycles</div><div class="value" style="color:var(--red)">'+stats.cycles+'</div></div>';
-        statsHtml += '</div>';
+        // Stats bar
+        var sh = '<div class="flow-stats">';
+        sh += stat('Calls', stats.nodes);
+        sh += stat('Max Depth', stats.depth);
+        sh += stat('Modules', Object.keys(stats.modules).length);
+        sh += stat('Classes', Object.keys(stats.classes).length);
+        if(stats.cycles > 0) sh += stat('Cycles', stats.cycles, 'var(--red)');
+        if(stats.dedups > 0) sh += stat('Deduplicated', stats.dedups, 'var(--cyan)');
+        sh += '</div>';
 
-        document.getElementById('content').innerHTML = statsHtml + '<div class="flow-tree">' + treeHtml + '</div>';
+        // Toolbar
+        var tb = '<div class="toolbar">';
+        tb += '<button class="toolbar-btn" onclick="expandAll()">⊞ Expand All</button>';
+        tb += '<button class="toolbar-btn" onclick="collapseAll()">⊟ Collapse All</button>';
+        tb += '<button class="toolbar-btn" onclick="expandToDepth(2)">Depth 2</button>';
+        tb += '<button class="toolbar-btn" onclick="expandToDepth(3)">Depth 3</button>';
+        tb += '<button class="toolbar-btn" onclick="expandToDepth(5)">Depth 5</button>';
+        tb += '<div class="toolbar-sep"></div>';
+        tb += buildLegend(stats);
+        tb += '</div>';
+
+        document.getElementById('content').innerHTML = sh + tb + '<div class="flow-tree">' + treeHtml + '</div>';
       }
 
-      function buildFlowTree(fqn, depth, visited, stats, isRoot) {
+      function stat(label, value, color) {
+        return '<div class="flow-stat"><div class="label">'+label+'</div><div class="value"'+(color?' style="color:'+color+'"':'')+ '>'+value+'</div></div>';
+      }
+
+      function buildLegend(stats) {
+        var h = '<div class="legend">';
+        var mods = Object.keys(stats.modules);
+        mods.sort();
+        mods.forEach(function(m) {
+          var c = moduleColorMap[m] || {bg:'#f0f2f5',fg:'#64748b'};
+          h += '<div class="legend-item"><div class="legend-swatch" style="background:'+c.bg+';border:2px solid '+c.fg+';"></div>'+esc(m)+'</div>';
+        });
+        h += '</div>';
+        return h;
+      }
+
+      function buildFlowTree(fqn, depth, visited, expanded, stats, isRoot) {
         var parts = fqn.split('#');
         var className = parts[0] || '';
         var methodShort = parts[1] || '';
         var modName = findModule(className);
+        var nid = nodeIdCounter++;
 
         if(modName) { stats.modules[modName] = true; stats.classes[className] = true; }
         if(depth > stats.depth) stats.depth = depth;
@@ -257,84 +370,110 @@
         // Cycle detection
         if(visited[fqn]) {
           stats.cycles++;
-          return '<div class="flow-card cycle">'
+          return '<div class="flow-row">'
+            + '<span class="flow-toggle leaf"></span>'
+            + '<div class="flow-card cycle">'
             + modBadge(modName||'?')
             + '<span class="cls-name">'+esc(simpleName(className))+'.</span>'
-            + '<span class="method-name">'+esc(shortMethod(methodShort))+'</span>'
+            + '<span class="method-name">'+fmtMethod(methodShort)+'</span>'
             + '<span class="cycle-label">⟲ CYCLE</span>'
-            + '</div>';
+            + '</div></div>';
+        }
+
+        // Dedup: already fully expanded elsewhere
+        if(!isRoot && expanded[fqn]) {
+          stats.dedups++;
+          return '<div class="flow-row">'
+            + '<span class="flow-toggle leaf"></span>'
+            + '<div class="flow-card dedup clickable" onclick="scrollToFirstNode(\''+escAttr(fqn)+'\')" title="Already expanded above – click to jump">'
+            + modBadge(modName||'?')
+            + '<span class="cls-name">'+esc(simpleName(className))+'.</span>'
+            + '<span class="method-name">'+fmtMethod(methodShort)+'</span>'
+            + '<span class="dedup-label">↗ see above</span>'
+            + '</div></div>';
         }
 
         // Depth limit
         if(depth > MAX_DEPTH) {
-          return '<div class="depth-limit-note">⋯ max depth ('+MAX_DEPTH+') reached</div>';
+          return '<div class="flow-row"><span class="flow-toggle leaf"></span><div class="depth-limit-note">⋯ max depth ('+MAX_DEPTH+') reached</div></div>';
         }
 
         visited[fqn] = true;
+        expanded[fqn] = true;
 
         var targets = data.callGraph[fqn] || [];
-        var cardClass = isRoot ? 'flow-card root' : 'flow-card';
-        if(!isRoot && targets.length > 0) cardClass += ' clickable';
+        var hasChildren = targets.length > 0;
+        var startExpanded = depth < INITIAL_EXPAND_DEPTH;
 
-        var h = '<div class="'+cardClass+'"'
+        var cardClass = isRoot ? 'flow-card root' : 'flow-card';
+        if(!isRoot && hasChildren) cardClass += ' clickable';
+
+        // Toggle button
+        var h = '<div class="flow-row">';
+        if(hasChildren) {
+          h += '<button class="flow-toggle" id="tg-'+nid+'" data-depth="'+depth+'" onclick="toggleNode('+nid+')">'+(startExpanded?'▼':'▶')+'</button>';
+        } else {
+          h += '<span class="flow-toggle leaf"></span>';
+        }
+        h += '<div class="'+cardClass+'" data-fqn="'+escAttr(fqn)+'"'
           + (!isRoot && data.callGraph[fqn] ? ' onclick="selectMethodByFqn(\''+escAttr(fqn)+'\')" title="Click to explore from here"' : '')
           + '>'
           + modBadge(modName||'?')
           + '<span class="cls-name">'+esc(simpleName(className))+'.</span>'
-          + '<span class="method-name">'+esc(shortMethod(methodShort))+'</span>'
-          + '</div>';
+          + '<span class="method-name">'+fmtMethod(methodShort)+'</span>';
+        if(hasChildren) h += '<span class="child-count">'+targets.length+'</span>';
+        h += '</div></div>';
 
-        if(targets.length > 0) {
+        // Children
+        if(hasChildren) {
+          h += '<div class="flow-children'+(startExpanded?'':' collapsed')+'" id="ch-'+nid+'" data-depth="'+depth+'">';
           for(var i=0; i<targets.length; i++) {
             var t = targets[i];
             stats.nodes++;
 
             if(t.interfaceCall && t.implementations && t.implementations.length > 1) {
-              // Multiple implementations: show branching
               h += '<div class="flow-node">';
+              h += '<div class="flow-row"><span class="flow-toggle leaf"></span>';
               h += '<div class="flow-card interface-node">'
                 + modBadge(t.targetModule)
                 + '<span class="cls-name">'+esc(t.targetSimpleName)+'.</span>'
-                + '<span class="method-name">'+esc(shortMethod(t.targetMethod))+'</span>'
+                + '<span class="method-name">'+fmtMethod(t.targetMethod)+'</span>'
                 + '<span class="interface-label">◇ INTERFACE</span>'
-                + '</div>';
+                + '</div></div>';
               h += '<div class="impl-group">';
               h += '<div class="impl-header">'+t.implementations.length+' Implementations</div>';
               for(var j=0; j<t.implementations.length; j++) {
                 var impl = t.implementations[j];
                 h += '<div class="flow-node">';
-                h += buildFlowTree(impl.fqn, depth+1, Object.assign({},visited), stats, false);
+                h += buildFlowTree(impl.fqn, depth+1, shallowCopy(visited), expanded, stats, false);
                 h += '</div>';
               }
               h += '</div></div>';
             } else {
-              // Single target (possibly resolved from interface)
               h += '<div class="flow-node">';
-              h += buildFlowTree(t.targetFqn, depth+1, visited, stats, false);
+              h += buildFlowTree(t.targetFqn, depth+1, visited, expanded, stats, false);
               h += '</div>';
             }
           }
+          h += '</div>';
         }
 
         return h;
       }
 
-      function findModule(className) {
-        for(var i=0; i<(data.modules||[]).length; i++) {
-          for(var j=0; j<data.modules[i].classes.length; j++) {
-            if(data.modules[i].classes[j].className === className) return data.modules[i].name;
-          }
+      function shallowCopy(obj) {
+        var r = {};
+        for(var k in obj) r[k] = obj[k];
+        return r;
+      }
+
+      function scrollToFirstNode(fqn) {
+        var el = document.querySelector('.flow-card.root[data-fqn="'+CSS.escape(fqn)+'"], .flow-card[data-fqn="'+CSS.escape(fqn)+'"]:not(.dedup):not(.cycle)');
+        if(el) {
+          el.scrollIntoView({block:'center',behavior:'smooth'});
+          el.style.outline = '2px solid var(--cyan)';
+          setTimeout(function(){ el.style.outline=''; }, 1500);
         }
-        return null;
-      }
-
-      function simpleName(fqn) {
-        var d = fqn.lastIndexOf('.');
-        return d >= 0 ? fqn.substring(d+1) : fqn;
-      }
-
-      function escAttr(s) {
-        return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
       }
     </script>
   </body>

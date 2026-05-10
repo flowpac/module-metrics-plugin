@@ -157,6 +157,14 @@
         text-transform: uppercase; letter-spacing: 0.04em;
       }
       .metric-tile .value { font-size: 1.35rem; font-weight: 700; }
+      .metric-tile .help {
+        font-size: 0.7rem; color: var(--text-secondary); line-height: 1.4;
+        margin-top: 0.3rem; border-top: 1px solid var(--border); padding-top: 0.3rem;
+        display: none;
+      }
+      .metric-tile:hover .help { display: block; }
+      .metric-tile { cursor: default; transition: box-shadow 0.15s; }
+      .metric-tile:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 
       .badge {
         display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px;
@@ -399,7 +407,11 @@
       }
 
       // --- Helpers ---
-      function tile(l, v) { return '<div class="metric-tile"><span class="label">' + l + '</span><span class="value">' + v + '</span></div>'; }
+      function tile(l, v, help) {
+        var h = '<div class="metric-tile"><span class="label">' + l + '</span><span class="value">' + v + '</span>';
+        if (help) h += '<span class="help">' + help + '</span>';
+        return h + '</div>';
+      }
       function sRow(l, v) { return '<tr><td>' + l + '</td><td style="font-weight:600">' + v + '</td></tr>'; }
 
       // --- Dependency Graph ---
@@ -584,14 +596,21 @@
       // --- Module Detail Content ---
       data.forEach(function(d, i) {
         var h = '<div class="card"><div class="card-header"><h3>Key Metrics</h3>' + distBadge(d.distance) + '</div><div class="card-body"><div class="metrics-grid">';
-        h += tile('Classes', d.numberOfClasses) + tile('Lines', d.totalLines) + tile('Abstractness', fmt(d.abstractness)) + tile('Instability', fmt(d.instability));
-        h += tile('Distance', fmt(d.distance)) + tile('Ca (Afferent)', d.ca) + tile('Ce (Efferent)', d.ce);
-        h += tile('Avg LCOM4', fmt(d.lcom4)) + tile('Avg Methods/Class', fmt(d.averageMethodsPerClass));
-        h += tile('Avg Public Methods', fmt(d.averagePublicMethodsPerClass));
-        h += tile('Public API Surface', d.publicApiSurface);
-        h += tile('Avg Cyclomatic Compl.', fmt(d.averageCyclomaticComplexity));
-        h += tile('Max Cyclomatic Compl.', d.maxCyclomaticComplexity);
-        h += tile('Getter/Setter Share', pct(d.shareGetterSetters)) + tile('Local Call Share', pct(d.shareLocalCallMethods));
+        h += tile('Classes', d.numberOfClasses, 'Total number of classes and interfaces in this module.');
+        h += tile('Lines', d.totalLines, 'Total lines of bytecode across all methods. Indicates overall module size.');
+        h += tile('Abstractness', fmt(d.abstractness), 'Ratio of abstract classes/interfaces to total classes. Range 0–1. High values indicate the module defines contracts rather than implementations.');
+        h += tile('Instability', fmt(d.instability), 'Ce / (Ce + Ca). Range 0–1. A value of 0 means fully stable (only depended upon), 1 means fully unstable (only depends on others). Stable modules should be abstract.');
+        h += tile('Distance', fmt(d.distance), '|A + I − 1|. Distance from the Main Sequence. Ideally close to 0. High values indicate a module is either too concrete and stable (Zone of Pain) or too abstract and unstable (Zone of Uselessness).');
+        h += tile('Ca (Afferent)', d.ca, 'Afferent Coupling: number of external classes that depend on classes in this module. High Ca means many dependents — changes here have wide impact.');
+        h += tile('Ce (Efferent)', d.ce, 'Efferent Coupling: number of classes in this module that depend on external classes. High Ce means the module relies heavily on others.');
+        h += tile('Avg LCOM4', fmt(d.lcom4), 'Lack of Cohesion of Methods (LCOM4): average connected components per class. Ideal is 1.0 (fully cohesive). Values &gt; 2 suggest the class should be split.');
+        h += tile('Avg Methods/Class', fmt(d.averageMethodsPerClass), 'Average number of non-constructor methods per class. Very high values may indicate God Classes.');
+        h += tile('Avg Public Methods', fmt(d.averagePublicMethodsPerClass), 'Average number of public methods per class. A large public API per class reduces encapsulation.');
+        h += tile('Public API Surface', d.publicApiSurface, 'Total number of public methods on public classes. Represents the external contract of this module. Smaller is usually better for maintainability.');
+        h += tile('Avg Cyclomatic Compl.', fmt(d.averageCyclomaticComplexity), 'Average cyclomatic complexity per method. Counts decision points (if, switch, catch). 1–4 is simple, 5–10 moderate, &gt;10 complex and hard to test.');
+        h += tile('Max Cyclomatic Compl.', d.maxCyclomaticComplexity, 'Highest cyclomatic complexity of any single method. Methods &gt; 10 should be refactored for readability and testability.');
+        h += tile('Getter/Setter Share', pct(d.shareGetterSetters), 'Share of methods that read or write exactly one field. High values suggest an anemic domain model with little behavior.');
+        h += tile('Local Call Share', pct(d.shareLocalCallMethods), 'Share of methods that call other methods within the same class. Higher values indicate better internal cohesion and delegation.');
         h += '</div></div></div>';
 
         // Circular dependencies warning

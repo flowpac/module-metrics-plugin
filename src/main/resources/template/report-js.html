@@ -545,6 +545,7 @@
       var sideHtml = '<div class="sidebar-header"><h1>OO Metrics</h1><p>Design Quality Report</p></div>';
       sideHtml += '<div class="nav-section">Overview</div>';
       sideHtml += '<button class="nav-item active" data-target="content-summary" onclick="switchView(this, \'Summary\')">Summary</button>';
+      sideHtml += '<a class="nav-item" href="module-dependencies.html" style="text-decoration:none;color:var(--accent);">&#x1F4C8; Dependency Graph</a>';
       sideHtml += '<div class="nav-section">Modules (' + data.length + ')</div>';
       data.forEach(function(d, i) {
         var bc = d.distance <= 0.3 ? 'badge-good' : d.distance <= 0.6 ? 'badge-warn' : 'badge-bad';

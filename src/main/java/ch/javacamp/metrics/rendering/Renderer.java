@@ -13,11 +13,20 @@ import java.util.Objects;
 public class Renderer {
 
     public static final String HTML_TEMPLATE = "template/report-js.html";
+    public static final String DEPENDENCY_GRAPH_TEMPLATE = "template/dependency-graph.html";
 
     private final Gson gson = new GsonBuilder().setPrettyPrinting().serializeSpecialFloatingPointValues().create();
 
     public void render(Path outputFile, List<MetricsResult> results) {
-        try (var is = getClass().getClassLoader().getResourceAsStream(HTML_TEMPLATE)) {
+        renderTemplate(HTML_TEMPLATE, outputFile, results);
+    }
+
+    public void renderDependencyGraph(Path outputFile, List<MetricsResult> results) {
+        renderTemplate(DEPENDENCY_GRAPH_TEMPLATE, outputFile, results);
+    }
+
+    private void renderTemplate(String templatePath, Path outputFile, List<MetricsResult> results) {
+        try (var is = getClass().getClassLoader().getResourceAsStream(templatePath)) {
             Objects.requireNonNull(is);
             var template = IOUtils.toString(is, "UTF-8");
             template = template.replace("##data##", gson.toJson(results));

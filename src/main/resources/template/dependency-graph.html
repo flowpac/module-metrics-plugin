@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Module Dependency Graph</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAMFBMVEU0OkArMjhobHEoPUPFEBIuO0L+AAC2FBZ2JyuNICOfGx7xAwTjCAlCNTvVDA1aLzQ3COjMAAAAVUlEQVQI12NgwAaCDSA0888GCItjn0szWGBJTVoGSCjWs8TleQCQYV95evdxkFT8Kpe0PLDi5WfKd4LUsN5zS1sKFolt8bwAZrCaGqNYJAgFDEpQAAAzmxafI4vZWwAAAABJRU5ErkJggg==" />
+    <style>
+      :root {
+        --bg: #f5f7fa;
+        --surface: #ffffff;
+        --text: #1a1a2e;
+        --text-secondary: #64748b;
+        --accent: #4f46e5;
+        --accent-light: #e0e7ff;
+        --border: #e2e8f0;
+        --green: #16a34a;
+        --green-bg: #dcfce7;
+        --yellow: #ca8a04;
+        --yellow-bg: #fef9c3;
+        --red: #dc2626;
+        --red-bg: #fee2e2;
+        --radius: 12px;
+        --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+      }
+      .header {
+        background: var(--accent);
+        color: white;
+        padding: 1.25rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .header h1 { font-size: 1.25rem; font-weight: 700; }
+      .header a {
+        color: rgba(255,255,255,0.85);
+        font-size: 0.85rem;
+        text-decoration: none;
+        padding: 0.35rem 0.75rem;
+        border: 1px solid rgba(255,255,255,0.3);
+        border-radius: 6px;
+        transition: all 0.15s;
+      }
+      .header a:hover { background: rgba(255,255,255,0.15); color: #fff; }
+      .container {
+        max-width: 1400px;
+        margin: 1.5rem auto;
+        padding: 0 1.5rem;
+      }
+      .card {
+        background: var(--surface);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+      }
+      .card-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .card-header h3 { font-size: 1rem; font-weight: 600; }
+      .card-body { padding: 1.5rem; }
+      .legend {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        padding: 0.75rem 1.5rem;
+        border-top: 1px solid var(--border);
+        background: #fafbfc;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+      .legend-swatch {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        border: 1.5px solid transparent;
+      }
+      .graph-wrapper {
+        display: flex;
+        justify-content: center;
+        overflow-x: auto;
+        padding: 1rem;
+      }
+      canvas { max-width: 100%; height: auto; }
+      .badge {
+        display: inline-block;
+        padding: 0.15rem 0.6rem;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 600;
+      }
+      .badge-good { background: var(--green-bg); color: var(--green); }
+      .badge-warn { background: var(--yellow-bg); color: var(--yellow); }
+      .badge-bad  { background: var(--red-bg); color: var(--red); }
+      .info-text {
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>Module Dependency Graph</h1>
+      <a href="oo-metrics-report.html">← Back to Metrics Report</a>
+    </div>
+    <div class="container">
+      <div class="card">
+        <div class="card-header">
+          <h3>Layered Module Dependencies</h3>
+          <span class="info-text" id="layer-info"></span>
+        </div>
+        <div class="graph-wrapper">
+          <canvas id="dep-canvas"></canvas>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-swatch" style="background:#4f46e5;"></div> Module Node</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:#fff;border-color:#dc2626;"></div> Circular Dependency</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:#e0e7ff;border-color:#4f46e5;"></div> In = Afferent (depends on me)</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:#fef9c3;border-color:#ca8a04;"></div> Out = Efferent (I depend on)</div>
+          <div class="legend-item"><span style="font-size:0.75rem;">Layer 0 = no project dependencies (bottom)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      var data = ##data##;
+      data.sort(function(a, b) { return a.name.localeCompare(b.name); });
+
+      // Build adjacency: module -> set of efferent module names (within project)
+      var moduleNames = {};
+      data.forEach(function(d) { moduleNames[d.name] = true; });
+
+      var efferentMap = {};
+      var afferentMap = {};
+      data.forEach(function(d) {
+        efferentMap[d.name] = (d.efferentModules || []).map(function(m) { return m.moduleName; }).filter(function(n) { return moduleNames[n]; });
+        afferentMap[d.name] = (d.afferentModules || []).map(function(m) { return m.moduleName; }).filter(function(n) { return moduleNames[n]; });
+      });
+
+      // Detect circular dependencies
+      var inCycle = {};
+      data.forEach(function(d) {
+        if ((d.circularDependencies || []).length > 0) {
+          inCycle[d.name] = true;
+          d.circularDependencies.forEach(function(cycle) {
+            cycle.forEach(function(n) { inCycle[n] = true; });
+          });
+        }
+      });
+
+      // Compute layers via topological sort (Kahn's algorithm)
+      // Level 0 = no efferent deps. Level N = depends only on levels < N.
+      // Modules in cycles get placed at the highest possible layer.
+      function computeLayers() {
+        var layers = {};
+        var assigned = {};
+        var remaining = data.map(function(d) { return d.name; });
+
+        var level = 0;
+        var maxIter = remaining.length + 1;
+
+        while (remaining.length > 0 && maxIter-- > 0) {
+          var currentLayer = [];
+          remaining.forEach(function(name) {
+            var deps = efferentMap[name] || [];
+            var allDepsAssigned = deps.every(function(dep) { return assigned[dep]; });
+            if (allDepsAssigned) {
+              currentLayer.push(name);
+            }
+          });
+
+          if (currentLayer.length === 0) {
+            // Remaining modules are in cycles — assign them all to this level
+            remaining.forEach(function(name) {
+              layers[name] = level;
+              assigned[name] = true;
+            });
+            remaining = [];
+            break;
+          }
+
+          currentLayer.forEach(function(name) {
+            layers[name] = level;
+            assigned[name] = true;
+          });
+          remaining = remaining.filter(function(n) { return !assigned[n]; });
+          level++;
+        }
+
+        return layers;
+      }
+
+      var layers = computeLayers();
+      var maxLayer = 0;
+      Object.keys(layers).forEach(function(k) { if (layers[k] > maxLayer) maxLayer = layers[k]; });
+
+      document.getElementById('layer-info').textContent = data.length + ' modules, ' + (maxLayer + 1) + ' layers';
+
+      // Group modules by layer
+      var layerGroups = [];
+      for (var l = 0; l <= maxLayer; l++) {
+        var group = data.filter(function(d) { return layers[d.name] === l; });
+        group.sort(function(a, b) { return a.name.localeCompare(b.name); });
+        layerGroups.push(group);
+      }
+
+      // Drawing
+      var nodeW = 200, nodeH = 72, nodeR = 8;
+      var hGap = 40, vGap = 80;
+      var padTop = 60, padBottom = 40, padLeft = 40, padRight = 40;
+      var layerLabelW = 60;
+
+      var maxModulesInLayer = 1;
+      layerGroups.forEach(function(g) { if (g.length > maxModulesInLayer) maxModulesInLayer = g.length; });
+
+      var canvasW = padLeft + layerLabelW + maxModulesInLayer * (nodeW + hGap) - hGap + padRight;
+      var canvasH = padTop + (maxLayer + 1) * (nodeH + vGap) - vGap + padBottom;
+
+      // Minimum width
+      if (canvasW < 600) canvasW = 600;
+
+      var canvas = document.getElementById('dep-canvas');
+      var dpr = window.devicePixelRatio || 1;
+      canvas.width = canvasW * dpr;
+      canvas.height = canvasH * dpr;
+      canvas.style.width = canvasW + 'px';
+      canvas.style.height = canvasH + 'px';
+      var ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      // Background
+      ctx.fillStyle = '#fafbfc';
+      ctx.fillRect(0, 0, canvasW, canvasH);
+
+      // Compute node positions (layer 0 at bottom, highest layer at top)
+      var nodePositions = {};
+      layerGroups.forEach(function(group, layerIdx) {
+        var visualRow = maxLayer - layerIdx; // flip: layer 0 at bottom
+        var totalW = group.length * (nodeW + hGap) - hGap;
+        var startX = padLeft + layerLabelW + (maxModulesInLayer * (nodeW + hGap) - hGap - totalW) / 2;
+        var y = padTop + visualRow * (nodeH + vGap);
+
+        group.forEach(function(d, i) {
+          var x = startX + i * (nodeW + hGap);
+          nodePositions[d.name] = { x: x, y: y, cx: x + nodeW / 2, cy: y + nodeH / 2 };
+        });
+
+        // Layer label
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '11px system-ui';
+        ctx.textAlign = 'right';
+        ctx.fillText('Layer ' + layerIdx, padLeft + layerLabelW - 12, y + nodeH / 2 + 4);
+      });
+
+      // Draw edges first (behind nodes)
+      function drawArrow(x1, y1, x2, y2, color, opacity) {
+        var headLen = 7;
+        var angle = Math.atan2(y2 - y1, x2 - x1);
+
+        // Shorten line to not overlap with node border
+        var dx = x2 - x1, dy = y2 - y1;
+        var len = Math.sqrt(dx * dx + dy * dy);
+        if (len < 1) return;
+        var shortenBy = nodeR + 4;
+        var ratio = (len - shortenBy) / len;
+        var ax2 = x1 + dx * ratio;
+        var ay2 = y1 + dy * ratio;
+
+        ctx.globalAlpha = opacity || 0.5;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(ax2, ay2);
+        ctx.stroke();
+
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(ax2, ay2);
+        ctx.lineTo(ax2 - headLen * Math.cos(angle - 0.35), ay2 - headLen * Math.sin(angle - 0.35));
+        ctx.lineTo(ax2 - headLen * Math.cos(angle + 0.35), ay2 - headLen * Math.sin(angle + 0.35));
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      // Draw all dependency arrows
+      data.forEach(function(d) {
+        var from = nodePositions[d.name];
+        if (!from) return;
+        (efferentMap[d.name] || []).forEach(function(depName) {
+          var to = nodePositions[depName];
+          if (!to) return;
+          var isCyclic = inCycle[d.name] && inCycle[depName];
+          var color = isCyclic ? '#dc2626' : '#94a3b8';
+          drawArrow(from.cx, from.cy + nodeH / 2, to.cx, to.cy - nodeH / 2, color, isCyclic ? 0.8 : 0.4);
+        });
+      });
+
+      // Draw nodes
+      function fitText(text, maxWidth, maxFontSize, fontWeight) {
+        var size = maxFontSize;
+        var prefix = fontWeight ? fontWeight + ' ' : '';
+        while (size >= 7) {
+          ctx.font = prefix + size + 'px system-ui';
+          if (ctx.measureText(text).width <= maxWidth) return size;
+          size--;
+        }
+        return 7;
+      }
+
+      data.forEach(function(d) {
+        var pos = nodePositions[d.name];
+        if (!pos) return;
+        var x = pos.x, y = pos.y;
+        var hasCycle = !!inCycle[d.name];
+        var inCount = (afferentMap[d.name] || []).length;
+        var outCount = (efferentMap[d.name] || []).length;
+
+        // Node shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.06)';
+        ctx.beginPath();
+        ctx.roundRect(x + 2, y + 2, nodeW, nodeH, nodeR);
+        ctx.fill();
+
+        // Node background
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.roundRect(x, y, nodeW, nodeH, nodeR);
+        ctx.fill();
+
+        // Node border
+        ctx.strokeStyle = hasCycle ? '#dc2626' : '#4f46e5';
+        ctx.lineWidth = hasCycle ? 2.5 : 1.5;
+        ctx.stroke();
+
+        // Module name
+        var textMaxW = nodeW - 16;
+        var nameSize = fitText(d.name, textMaxW, 12, 'bold');
+        ctx.font = 'bold ' + nameSize + 'px system-ui';
+        ctx.fillStyle = '#1a1a2e';
+        ctx.textAlign = 'center';
+        ctx.fillText(d.name, x + nodeW / 2, y + 18);
+
+        // Classes and LoC info
+        var infoLabel = d.numberOfClasses + ' classes · ' + d.totalLines + ' LoC';
+        ctx.font = '9px system-ui';
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText(infoLabel, x + nodeW / 2, y + 32);
+
+        // In / Out badges
+        var badgeY = y + 40;
+        var badgeH = 16;
+        var badgeR = 8;
+
+        // In badge (afferent - blue)
+        var inLabel = 'In: ' + inCount;
+        ctx.font = 'bold 9px system-ui';
+        var inW = ctx.measureText(inLabel).width + 12;
+        var inX = x + nodeW / 2 - inW - 4;
+
+        ctx.fillStyle = '#e0e7ff';
+        ctx.beginPath();
+        ctx.roundRect(inX, badgeY, inW, badgeH, badgeR);
+        ctx.fill();
+        ctx.fillStyle = '#4f46e5';
+        ctx.textAlign = 'center';
+        ctx.fillText(inLabel, inX + inW / 2, badgeY + 11);
+
+        // Out badge (efferent - yellow)
+        var outLabel = 'Out: ' + outCount;
+        var outW = ctx.measureText(outLabel).width + 12;
+        var outX = x + nodeW / 2 + 4;
+
+        ctx.fillStyle = '#fef9c3';
+        ctx.beginPath();
+        ctx.roundRect(outX, badgeY, outW, badgeH, badgeR);
+        ctx.fill();
+        ctx.fillStyle = '#ca8a04';
+        ctx.textAlign = 'center';
+        ctx.fillText(outLabel, outX + outW / 2, badgeY + 11);
+      });
+
+      // Title
+      ctx.fillStyle = '#1a1a2e';
+      ctx.font = 'bold 14px system-ui';
+      ctx.textAlign = 'left';
+      ctx.fillText('Module Dependency Layers', padLeft, 24);
+      ctx.font = '11px system-ui';
+      ctx.fillStyle = '#64748b';
+      ctx.fillText('Bottom (Layer 0) = no project dependencies. Higher layers depend on lower layers.', padLeft, 42);
+    </script>
+  </body>
+</html>
+

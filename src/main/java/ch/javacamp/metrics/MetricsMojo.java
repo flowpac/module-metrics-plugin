@@ -70,7 +70,9 @@ public class MetricsMojo extends AbstractMojo {
         }
         var targetDir = new File(parentProject.getBasedir(), "target");
         if (targetDir.exists() || targetDir.mkdir()) {
-            renderer.render(targetDir.toPath().resolve("oo-metrics-report.html"), modules.computeMetrics());
+            var metrics = modules.computeMetrics();
+            renderer.render(targetDir.toPath().resolve("oo-metrics-report.html"), metrics);
+            renderer.renderDependencyGraph(targetDir.toPath().resolve("module-dependencies.html"), metrics);
         }
     }
 }

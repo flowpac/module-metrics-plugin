@@ -98,7 +98,7 @@
         overflow-x: auto;
         padding: 1rem;
       }
-      canvas { max-width: 100%; height: auto; }
+      canvas { display: block; }
       .badge {
         display: inline-block;
         padding: 0.15rem 0.6rem;
@@ -125,7 +125,10 @@
       <div class="card">
         <div class="card-header">
           <h3>Layered Module Dependencies</h3>
-          <span class="info-text" id="layer-info"></span>
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <span class="info-text" id="layer-info"></span>
+            <button id="download-btn" style="padding:0.35rem 0.75rem;font-size:0.8rem;font-weight:600;color:var(--accent);background:var(--accent-light);border:1px solid var(--accent);border-radius:6px;cursor:pointer;white-space:nowrap;transition:all 0.15s;" onmouseover="this.style.background='var(--accent)';this.style.color='#fff';" onmouseout="this.style.background='var(--accent-light)';this.style.color='var(--accent)';">⬇ Download PNG</button>
+          </div>
         </div>
         <div class="graph-wrapper">
           <canvas id="dep-canvas"></canvas>
@@ -144,7 +147,7 @@
       var data = ##data##;
       data.sort(function(a, b) { return a.name.localeCompare(b.name); });
 
-      // Build adjacency: module -> set of efferent module names (within project)
+      // Build adjacency
       var moduleNames = {};
       data.forEach(function(d) { moduleNames[d.name] = true; });
 
@@ -167,54 +170,32 @@
       });
 
       // Compute layers via topological sort (Kahn's algorithm)
-      // Level 0 = no efferent deps. Level N = depends only on levels < N.
-      // Modules in cycles get placed at the highest possible layer.
       function computeLayers() {
-        var layers = {};
-        var assigned = {};
+        var layers = {}, assigned = {};
         var remaining = data.map(function(d) { return d.name; });
-
-        var level = 0;
-        var maxIter = remaining.length + 1;
-
+        var level = 0, maxIter = remaining.length + 1;
         while (remaining.length > 0 && maxIter-- > 0) {
           var currentLayer = [];
           remaining.forEach(function(name) {
             var deps = efferentMap[name] || [];
-            var allDepsAssigned = deps.every(function(dep) { return assigned[dep]; });
-            if (allDepsAssigned) {
-              currentLayer.push(name);
-            }
+            if (deps.every(function(dep) { return assigned[dep]; })) currentLayer.push(name);
           });
-
           if (currentLayer.length === 0) {
-            // Remaining modules are in cycles — assign them all to this level
-            remaining.forEach(function(name) {
-              layers[name] = level;
-              assigned[name] = true;
-            });
-            remaining = [];
-            break;
+            remaining.forEach(function(name) { layers[name] = level; assigned[name] = true; });
+            remaining = []; break;
           }
-
-          currentLayer.forEach(function(name) {
-            layers[name] = level;
-            assigned[name] = true;
-          });
+          currentLayer.forEach(function(name) { layers[name] = level; assigned[name] = true; });
           remaining = remaining.filter(function(n) { return !assigned[n]; });
           level++;
         }
-
         return layers;
       }
 
       var layers = computeLayers();
       var maxLayer = 0;
       Object.keys(layers).forEach(function(k) { if (layers[k] > maxLayer) maxLayer = layers[k]; });
-
       document.getElementById('layer-info').textContent = data.length + ' modules, ' + (maxLayer + 1) + ' layers';
 
-      // Group modules by layer
       var layerGroups = [];
       for (var l = 0; l <= maxLayer; l++) {
         var group = data.filter(function(d) { return layers[d.name] === l; });
@@ -222,7 +203,7 @@
         layerGroups.push(group);
       }
 
-      // Drawing
+      // Layout constants
       var nodeW = 200, nodeH = 72, nodeR = 8;
       var hGap = 40, vGap = 80;
       var padTop = 60, padBottom = 40, padLeft = 40, padRight = 40;
@@ -233,8 +214,6 @@
 
       var canvasW = padLeft + layerLabelW + maxModulesInLayer * (nodeW + hGap) - hGap + padRight;
       var canvasH = padTop + (maxLayer + 1) * (nodeH + vGap) - vGap + padBottom;
-
-      // Minimum width
       if (canvasW < 600) canvasW = 600;
 
       var canvas = document.getElementById('dep-canvas');
@@ -246,47 +225,33 @@
       var ctx = canvas.getContext('2d');
       ctx.scale(dpr, dpr);
 
-      // Background
-      ctx.fillStyle = '#fafbfc';
-      ctx.fillRect(0, 0, canvasW, canvasH);
-
-      // Compute node positions (layer 0 at bottom, highest layer at top)
+      // Compute node positions
       var nodePositions = {};
       layerGroups.forEach(function(group, layerIdx) {
-        var visualRow = maxLayer - layerIdx; // flip: layer 0 at bottom
+        var visualRow = maxLayer - layerIdx;
         var totalW = group.length * (nodeW + hGap) - hGap;
         var startX = padLeft + layerLabelW + (maxModulesInLayer * (nodeW + hGap) - hGap - totalW) / 2;
         var y = padTop + visualRow * (nodeH + vGap);
-
         group.forEach(function(d, i) {
           var x = startX + i * (nodeW + hGap);
           nodePositions[d.name] = { x: x, y: y, cx: x + nodeW / 2, cy: y + nodeH / 2 };
         });
-
-        // Layer label
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '11px system-ui';
-        ctx.textAlign = 'right';
-        ctx.fillText('Layer ' + layerIdx, padLeft + layerLabelW - 12, y + nodeH / 2 + 4);
       });
 
-      // Draw edges first (behind nodes)
-      function drawArrow(x1, y1, x2, y2, color, opacity) {
+      // --- Drawing helpers ---
+
+      function drawArrow(x1, y1, x2, y2, color, opacity, lineWidth) {
         var headLen = 7;
         var angle = Math.atan2(y2 - y1, x2 - x1);
-
-        // Shorten line to not overlap with node border
         var dx = x2 - x1, dy = y2 - y1;
         var len = Math.sqrt(dx * dx + dy * dy);
         if (len < 1) return;
-        var shortenBy = nodeR + 4;
-        var ratio = (len - shortenBy) / len;
-        var ax2 = x1 + dx * ratio;
-        var ay2 = y1 + dy * ratio;
+        var ratio = (len - nodeR - 4) / len;
+        var ax2 = x1 + dx * ratio, ay2 = y1 + dy * ratio;
 
-        ctx.globalAlpha = opacity || 0.5;
+        ctx.globalAlpha = opacity;
         ctx.strokeStyle = color;
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = lineWidth;
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(ax2, ay2);
@@ -302,20 +267,6 @@
         ctx.globalAlpha = 1;
       }
 
-      // Draw all dependency arrows
-      data.forEach(function(d) {
-        var from = nodePositions[d.name];
-        if (!from) return;
-        (efferentMap[d.name] || []).forEach(function(depName) {
-          var to = nodePositions[depName];
-          if (!to) return;
-          var isCyclic = inCycle[d.name] && inCycle[depName];
-          var color = isCyclic ? '#dc2626' : '#94a3b8';
-          drawArrow(from.cx, from.cy + nodeH / 2, to.cx, to.cy - nodeH / 2, color, isCyclic ? 0.8 : 0.4);
-        });
-      });
-
-      // Draw nodes
       function fitText(text, maxWidth, maxFontSize, fontWeight) {
         var size = maxFontSize;
         var prefix = fontWeight ? fontWeight + ' ' : '';
@@ -327,7 +278,7 @@
         return 7;
       }
 
-      data.forEach(function(d) {
+      function drawNode(d, dimmed) {
         var pos = nodePositions[d.name];
         if (!pos) return;
         var x = pos.x, y = pos.y;
@@ -335,19 +286,17 @@
         var inCount = (afferentMap[d.name] || []).length;
         var outCount = (efferentMap[d.name] || []).length;
 
-        // Node shadow
+        ctx.globalAlpha = dimmed ? 0.25 : 1.0;
+
+        // Shadow
         ctx.fillStyle = 'rgba(0,0,0,0.06)';
-        ctx.beginPath();
-        ctx.roundRect(x + 2, y + 2, nodeW, nodeH, nodeR);
-        ctx.fill();
+        ctx.beginPath(); ctx.roundRect(x + 2, y + 2, nodeW, nodeH, nodeR); ctx.fill();
 
-        // Node background
+        // Background
         ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.roundRect(x, y, nodeW, nodeH, nodeR);
-        ctx.fill();
+        ctx.beginPath(); ctx.roundRect(x, y, nodeW, nodeH, nodeR); ctx.fill();
 
-        // Node border
+        // Border
         ctx.strokeStyle = hasCycle ? '#dc2626' : '#4f46e5';
         ctx.lineWidth = hasCycle ? 2.5 : 1.5;
         ctx.stroke();
@@ -356,57 +305,160 @@
         var textMaxW = nodeW - 16;
         var nameSize = fitText(d.name, textMaxW, 12, 'bold');
         ctx.font = 'bold ' + nameSize + 'px system-ui';
-        ctx.fillStyle = '#1a1a2e';
-        ctx.textAlign = 'center';
+        ctx.fillStyle = '#1a1a2e'; ctx.textAlign = 'center';
         ctx.fillText(d.name, x + nodeW / 2, y + 18);
 
-        // Classes and LoC info
-        var infoLabel = d.numberOfClasses + ' classes · ' + d.totalLines + ' LoC';
-        ctx.font = '9px system-ui';
-        ctx.fillStyle = '#94a3b8';
-        ctx.fillText(infoLabel, x + nodeW / 2, y + 32);
+        // Classes / LoC
+        ctx.font = '9px system-ui'; ctx.fillStyle = '#94a3b8';
+        ctx.fillText(d.numberOfClasses + ' classes \u00b7 ' + d.totalLines + ' LoC', x + nodeW / 2, y + 32);
 
-        // In / Out badges
-        var badgeY = y + 40;
-        var badgeH = 16;
-        var badgeR = 8;
+        // Badges
+        var badgeY = y + 40, badgeH = 16, bR = 8;
 
-        // In badge (afferent - blue)
         var inLabel = 'In: ' + inCount;
         ctx.font = 'bold 9px system-ui';
         var inW = ctx.measureText(inLabel).width + 12;
         var inX = x + nodeW / 2 - inW - 4;
+        ctx.fillStyle = '#e0e7ff'; ctx.beginPath(); ctx.roundRect(inX, badgeY, inW, badgeH, bR); ctx.fill();
+        ctx.fillStyle = '#4f46e5'; ctx.textAlign = 'center'; ctx.fillText(inLabel, inX + inW / 2, badgeY + 11);
 
-        ctx.fillStyle = '#e0e7ff';
-        ctx.beginPath();
-        ctx.roundRect(inX, badgeY, inW, badgeH, badgeR);
-        ctx.fill();
-        ctx.fillStyle = '#4f46e5';
-        ctx.textAlign = 'center';
-        ctx.fillText(inLabel, inX + inW / 2, badgeY + 11);
-
-        // Out badge (efferent - yellow)
         var outLabel = 'Out: ' + outCount;
         var outW = ctx.measureText(outLabel).width + 12;
         var outX = x + nodeW / 2 + 4;
+        ctx.fillStyle = '#fef9c3'; ctx.beginPath(); ctx.roundRect(outX, badgeY, outW, badgeH, bR); ctx.fill();
+        ctx.fillStyle = '#ca8a04'; ctx.textAlign = 'center'; ctx.fillText(outLabel, outX + outW / 2, badgeY + 11);
 
-        ctx.fillStyle = '#fef9c3';
-        ctx.beginPath();
-        ctx.roundRect(outX, badgeY, outW, badgeH, badgeR);
-        ctx.fill();
-        ctx.fillStyle = '#ca8a04';
-        ctx.textAlign = 'center';
-        ctx.fillText(outLabel, outX + outW / 2, badgeY + 11);
+        ctx.globalAlpha = 1;
+      }
+
+      // --- Main draw function ---
+
+      var selectedNode = null;
+
+      function drawGraph() {
+        ctx.clearRect(0, 0, canvasW, canvasH);
+        ctx.fillStyle = '#fafbfc';
+        ctx.fillRect(0, 0, canvasW, canvasH);
+
+        // Title
+        ctx.fillStyle = '#1a1a2e'; ctx.font = 'bold 14px system-ui'; ctx.textAlign = 'left';
+        ctx.fillText('Module Dependency Layers', padLeft, 24);
+        ctx.font = '11px system-ui'; ctx.fillStyle = '#64748b';
+        ctx.fillText('Bottom (Layer 0) = no project dependencies. Higher layers depend on lower layers.', padLeft, 42);
+
+        // Layer labels
+        layerGroups.forEach(function(group, layerIdx) {
+          var visualRow = maxLayer - layerIdx;
+          var y = padTop + visualRow * (nodeH + vGap);
+          ctx.globalAlpha = selectedNode ? 0.25 : 1;
+          ctx.fillStyle = '#94a3b8'; ctx.font = '11px system-ui'; ctx.textAlign = 'right';
+          ctx.fillText('Layer ' + layerIdx, padLeft + layerLabelW - 12, y + nodeH / 2 + 4);
+          ctx.globalAlpha = 1;
+        });
+
+        // Build connected set
+        var isConnected = {};
+        if (selectedNode) {
+          isConnected[selectedNode] = true;
+          (efferentMap[selectedNode] || []).forEach(function(n) { isConnected[n] = true; });
+          (afferentMap[selectedNode] || []).forEach(function(n) { isConnected[n] = true; });
+        }
+
+        // Draw edges
+        if (selectedNode) {
+          // Pass 1: dimmed (unrelated) edges
+          data.forEach(function(d) {
+            var from = nodePositions[d.name]; if (!from) return;
+            (efferentMap[d.name] || []).forEach(function(depName) {
+              var to = nodePositions[depName]; if (!to) return;
+              if (d.name !== selectedNode && depName !== selectedNode) {
+                drawArrow(from.cx, from.cy + nodeH / 2, to.cx, to.cy - nodeH / 2, '#d1d5db', 0.1, 1);
+              }
+            });
+          });
+          // Pass 2: highlighted (connected) edges on top
+          data.forEach(function(d) {
+            var from = nodePositions[d.name]; if (!from) return;
+            (efferentMap[d.name] || []).forEach(function(depName) {
+              var to = nodePositions[depName]; if (!to) return;
+              var isCyclic = inCycle[d.name] && inCycle[depName];
+              if (d.name === selectedNode) {
+                // Outgoing: orange (cyclic stays red)
+                drawArrow(from.cx, from.cy + nodeH / 2, to.cx, to.cy - nodeH / 2, isCyclic ? '#dc2626' : '#e67e22', 0.9, 2.5);
+              } else if (depName === selectedNode) {
+                // Incoming: blue (cyclic stays red)
+                drawArrow(from.cx, from.cy + nodeH / 2, to.cx, to.cy - nodeH / 2, isCyclic ? '#dc2626' : '#4f46e5', 0.9, 2.5);
+              }
+            });
+          });
+        } else {
+          // Default: all edges at normal opacity
+          data.forEach(function(d) {
+            var from = nodePositions[d.name]; if (!from) return;
+            (efferentMap[d.name] || []).forEach(function(depName) {
+              var to = nodePositions[depName]; if (!to) return;
+              var isCyclic = inCycle[d.name] && inCycle[depName];
+              drawArrow(from.cx, from.cy + nodeH / 2, to.cx, to.cy - nodeH / 2,
+                isCyclic ? '#dc2626' : '#94a3b8', isCyclic ? 0.8 : 0.4, 1.5);
+            });
+          });
+        }
+
+        // Draw nodes
+        data.forEach(function(d) {
+          drawNode(d, selectedNode && !isConnected[d.name]);
+        });
+
+        // Highlight border of selected node
+        if (selectedNode) {
+          var pos = nodePositions[selectedNode];
+          if (pos) {
+            ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.roundRect(pos.x - 1, pos.y - 1, nodeW + 2, nodeH + 2, nodeR + 1); ctx.stroke();
+          }
+        }
+      }
+
+      // Initial draw
+      drawGraph();
+
+      // --- Interaction ---
+
+      function getNodeAt(cx, cy) {
+        for (var i = 0; i < data.length; i++) {
+          var pos = nodePositions[data[i].name];
+          if (pos && cx >= pos.x && cx <= pos.x + nodeW && cy >= pos.y && cy <= pos.y + nodeH) {
+            return data[i].name;
+          }
+        }
+        return null;
+      }
+
+      canvas.style.cursor = 'default';
+
+      canvas.addEventListener('click', function(e) {
+        var rect = canvas.getBoundingClientRect();
+        var cx = (e.clientX - rect.left) * (canvasW / rect.width);
+        var cy = (e.clientY - rect.top) * (canvasH / rect.height);
+        var hit = getNodeAt(cx, cy);
+        selectedNode = (hit === selectedNode) ? null : hit;
+        drawGraph();
       });
 
-      // Title
-      ctx.fillStyle = '#1a1a2e';
-      ctx.font = 'bold 14px system-ui';
-      ctx.textAlign = 'left';
-      ctx.fillText('Module Dependency Layers', padLeft, 24);
-      ctx.font = '11px system-ui';
-      ctx.fillStyle = '#64748b';
-      ctx.fillText('Bottom (Layer 0) = no project dependencies. Higher layers depend on lower layers.', padLeft, 42);
+      canvas.addEventListener('mousemove', function(e) {
+        var rect = canvas.getBoundingClientRect();
+        var cx = (e.clientX - rect.left) * (canvasW / rect.width);
+        var cy = (e.clientY - rect.top) * (canvasH / rect.height);
+        canvas.style.cursor = getNodeAt(cx, cy) ? 'pointer' : 'default';
+      });
+
+      // Download
+      document.getElementById('download-btn').addEventListener('click', function() {
+        var link = document.createElement('a');
+        link.download = 'module-dependency-graph.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
     </script>
   </body>
 </html>

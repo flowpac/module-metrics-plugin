@@ -34,6 +34,7 @@ public class MetricsResult {
     private final double averageCyclomaticComplexity;
     private final int maxCyclomaticComplexity;
     private final List<List<String>> circularDependencies;
+    private final List<StabilityViolation> sdpViolations;
 
     @Builder
     @Getter
@@ -50,5 +51,15 @@ public class MetricsResult {
     public static class ModuleCoupling {
         private final String moduleName;
         private final long classCount;
+    }
+
+    @Builder
+    @Getter
+    @Accessors(fluent = true)
+    @AllArgsConstructor
+    public static class StabilityViolation {
+        private final String dependencyModule;
+        private final double thisInstability;
+        private final double dependencyInstability;
     }
 }

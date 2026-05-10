@@ -174,12 +174,62 @@ public class Modules {
     }
 
     public List<MetricsResult> computeMetrics() {
+        // First pass: compute instability for all modules
+        Map<String, Double> instabilities = new HashMap<>();
+        for (var mod : modules) {
+            var ca = externalClassesUsingClassesInThisModule(mod).size();
+            var ce = externalClassesUsedByThisModule(mod).size();
+            instabilities.put(mod.name(), (ca + ce) == 0 ? 0d : (double) ce / (double) (ce + ca));
+        }
+
+        // Second pass: compute full metrics with SDP violations
         List<MetricsResult> result = new ArrayList<>();
-        // new CallFlowCalculator().calculate(modules);
         for (ModuleDescriptor currentModule : getModules()) {
-            result.add(computeMetrics(currentModule));
+            var metrics = computeMetrics(currentModule);
+            var sdpViolations = computeSdpViolations(currentModule, instabilities);
+            result.add(MetricsResult.builder()
+                    .name(metrics.name())
+                    .numberOfClasses(metrics.numberOfClasses())
+                    .totalLines(metrics.totalLines())
+                    .ca(metrics.ca())
+                    .ce(metrics.ce())
+                    .instability(metrics.instability())
+                    .abstractness(metrics.abstractness())
+                    .distance(metrics.distance())
+                    .lcom4(metrics.lcom4())
+                    .averageMethodsPerClass(metrics.averageMethodsPerClass())
+                    .averagePublicMethodsPerClass(metrics.averagePublicMethodsPerClass())
+                    .shareGetterSetters(metrics.shareGetterSetters())
+                    .shareLocalCallMethods(metrics.shareLocalCallMethods())
+                    .methodStatistics(metrics.methodStatistics())
+                    .afferentModules(metrics.afferentModules())
+                    .efferentModules(metrics.efferentModules())
+                    .publicApiSurface(metrics.publicApiSurface())
+                    .averageCyclomaticComplexity(metrics.averageCyclomaticComplexity())
+                    .maxCyclomaticComplexity(metrics.maxCyclomaticComplexity())
+                    .circularDependencies(metrics.circularDependencies())
+                    .sdpViolations(sdpViolations)
+                    .build());
         }
         return result;
+    }
+
+    private List<MetricsResult.StabilityViolation> computeSdpViolations(ModuleDescriptor module, Map<String, Double> instabilities) {
+        var myInstability = instabilities.getOrDefault(module.name(), 0d);
+        List<MetricsResult.StabilityViolation> violations = new ArrayList<>();
+
+        for (var other : otherModules(module)) {
+            var otherClassNames = other.allClassNames();
+            boolean dependsOn = module.classes().stream().anyMatch(c -> c.hasDependency(otherClassNames));
+            if (dependsOn) {
+                var otherInstability = instabilities.getOrDefault(other.name(), 0d);
+                // SDP violation: I depend on a module that is MORE unstable than me
+                if (otherInstability > myInstability + 0.01) {
+                    violations.add(new MetricsResult.StabilityViolation(other.name(), myInstability, otherInstability));
+                }
+            }
+        }
+        return violations;
     }
 
 }

@@ -55,6 +55,13 @@ public record ModuleDescriptor(String name, Set<ClassDescriptor> classes) {
         return (double) methods / (double) totalClasses();
     }
 
+    public long totalLines() {
+        return classes.stream()
+                .flatMap(c -> c.methods().stream())
+                .mapToLong(MethodDescriptor::lines)
+                .sum();
+    }
+
 
 
 }

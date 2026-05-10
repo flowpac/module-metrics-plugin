@@ -69,6 +69,7 @@ public class Modules {
 
         return new MetricsResult.MetricsResultBuilder()
                 .numberOfClasses(module.totalClasses())
+                .totalLines(module.totalLines())
                 .name(module.name())
                 .ca(ca)
                 .ce(ce)

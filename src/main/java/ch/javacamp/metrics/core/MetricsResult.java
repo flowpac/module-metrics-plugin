@@ -14,6 +14,7 @@ public class MetricsResult {
 
     private final String name;
     private final long numberOfClasses;
+    private final long totalLines;
     private final long ca;
     private final long ce;
     private final double abstractness;

@@ -446,10 +446,10 @@
       sh += '<div class="diagram-wrapper"><canvas id="distance-chart"></canvas></div></div>';
       sh += '</div>';
       sh += '<div class="card"><div class="card-header"><h3>Module Comparison</h3></div><div class="card-body" style="padding:0;overflow-x:auto;">';
-      sh += '<table class="comparison-table"><thead><tr><th>Module</th><th>Classes</th><th>A</th><th>I</th><th>D</th><th>Ca</th><th>Ce</th><th>LCOM4</th><th>Quality</th></tr></thead><tbody>';
+      sh += '<table class="comparison-table"><thead><tr><th>Module</th><th>Classes</th><th>Lines</th><th>A</th><th>I</th><th>D</th><th>Ca</th><th>Ce</th><th>LCOM4</th><th>Quality</th></tr></thead><tbody>';
       data.forEach(function(d, i) {
         sh += '<tr onclick="switchView(document.querySelectorAll(\'.nav-item\')[' + (i + 1) + '],\'' + d.name.replace(/'/g, "\\'") + '\')">';
-        sh += '<td>' + d.name + '</td><td>' + d.numberOfClasses + '</td><td>' + fmt(d.abstractness) + '</td><td>' + fmt(d.instability) + '</td><td>' + fmt(d.distance) + '</td><td>' + d.ca + '</td><td>' + d.ce + '</td><td>' + fmt(d.lcom4) + '</td><td>' + distBadge(d.distance) + '</td></tr>';
+        sh += '<td>' + d.name + '</td><td>' + d.numberOfClasses + '</td><td>' + d.totalLines + '</td><td>' + fmt(d.abstractness) + '</td><td>' + fmt(d.instability) + '</td><td>' + fmt(d.distance) + '</td><td>' + d.ca + '</td><td>' + d.ce + '</td><td>' + fmt(d.lcom4) + '</td><td>' + distBadge(d.distance) + '</td></tr>';
       });
       sh += '</tbody></table></div></div>';
       document.getElementById('content-summary').innerHTML = sh;
@@ -457,7 +457,7 @@
       // --- Module Detail Content ---
       data.forEach(function(d, i) {
         var h = '<div class="card"><div class="card-header"><h3>Key Metrics</h3>' + distBadge(d.distance) + '</div><div class="card-body"><div class="metrics-grid">';
-        h += tile('Classes', d.numberOfClasses) + tile('Abstractness', fmt(d.abstractness)) + tile('Instability', fmt(d.instability));
+        h += tile('Classes', d.numberOfClasses) + tile('Lines', d.totalLines) + tile('Abstractness', fmt(d.abstractness)) + tile('Instability', fmt(d.instability));
         h += tile('Distance', fmt(d.distance)) + tile('Ca (Afferent)', d.ca) + tile('Ce (Efferent)', d.ce);
         h += tile('Avg LCOM4', fmt(d.lcom4)) + tile('Avg Methods/Class', fmt(d.averageMethodsPerClass));
         h += tile('Avg Public Methods', fmt(d.averagePublicMethodsPerClass));

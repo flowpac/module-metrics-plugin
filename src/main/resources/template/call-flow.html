@@ -287,6 +287,8 @@
 
       // --- Select method & render flow ---
       var activeBtn = null;
+      var flowHistory = []; // stack of previously viewed FQNs
+
       function selectMethod(btn) {
         if(activeBtn) activeBtn.classList.remove('active');
         btn.classList.add('active');
@@ -295,6 +297,10 @@
       }
 
       function selectMethodByFqn(fqn) {
+        // Push current view to history before navigating
+        if(activeBtn && activeBtn.dataset.fqn !== fqn) {
+          flowHistory.push(activeBtn.dataset.fqn);
+        }
         var btn = document.querySelector('.nav-method[data-fqn="'+CSS.escape(fqn)+'"]');
         if(btn) {
           var p = btn.parentElement;
@@ -304,7 +310,23 @@
               p.previousElementSibling.classList.add('open');
             p = p.parentElement;
           }
-          selectMethod(btn);
+          if(activeBtn) activeBtn.classList.remove('active');
+          btn.classList.add('active');
+          activeBtn = btn;
+          renderFlow(fqn);
+          btn.scrollIntoView({block:'center',behavior:'smooth'});
+        }
+      }
+
+      function goBack() {
+        if(flowHistory.length === 0) return;
+        var prevFqn = flowHistory.pop();
+        var btn = document.querySelector('.nav-method[data-fqn="'+CSS.escape(prevFqn)+'"]');
+        if(btn) {
+          if(activeBtn) activeBtn.classList.remove('active');
+          btn.classList.add('active');
+          activeBtn = btn;
+          renderFlow(prevFqn);
           btn.scrollIntoView({block:'center',behavior:'smooth'});
         }
       }
@@ -368,6 +390,10 @@
 
         // Toolbar
         var tb = '<div class="toolbar">';
+        if(flowHistory.length > 0) {
+          tb += '<button class="toolbar-btn" onclick="goBack()" style="background:var(--accent);color:white;border-color:var(--accent);">← Back ('+flowHistory.length+')</button>';
+          tb += '<div class="toolbar-sep"></div>';
+        }
         tb += '<button class="toolbar-btn" onclick="expandAll()">⊞ Expand All</button>';
         tb += '<button class="toolbar-btn" onclick="collapseAll()">⊟ Collapse All</button>';
         tb += '<button class="toolbar-btn" onclick="expandToDepth(2)">Depth 2</button>';

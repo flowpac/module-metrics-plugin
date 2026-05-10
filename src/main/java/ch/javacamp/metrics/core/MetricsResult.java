@@ -30,6 +30,10 @@ public class MetricsResult {
     private final MethodStatistics methodStatistics;
     private final List<ModuleCoupling> afferentModules;
     private final List<ModuleCoupling> efferentModules;
+    private final long publicApiSurface;
+    private final double averageCyclomaticComplexity;
+    private final int maxCyclomaticComplexity;
+    private final List<List<String>> circularDependencies;
 
     @Builder
     @Getter

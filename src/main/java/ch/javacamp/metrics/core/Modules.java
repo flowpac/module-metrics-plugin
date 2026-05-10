@@ -4,8 +4,11 @@ import lombok.Getter;
 
 import javax.inject.Singleton;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -84,6 +87,10 @@ public class Modules {
                 .methodStatistics(methodStatistics)
                 .afferentModules(computeAfferentModules(module))
                 .efferentModules(computeEfferentModules(module))
+                .publicApiSurface(module.publicApiSurface())
+                .averageCyclomaticComplexity(module.averageCyclomaticComplexity())
+                .maxCyclomaticComplexity(module.maxCyclomaticComplexity())
+                .circularDependencies(findCircularDependencies(module))
                 .build();
     }
 
@@ -126,6 +133,44 @@ public class Modules {
             }
         }
         return result;
+    }
+
+    private List<List<String>> findCircularDependencies(ModuleDescriptor module) {
+        // Build adjacency map for all modules
+        Map<String, Set<String>> graph = new HashMap<>();
+        for (var mod : modules) {
+            Set<String> deps = new HashSet<>();
+            for (var other : otherModules(mod)) {
+                var otherClassNames = other.allClassNames();
+                boolean hasDep = mod.classes().stream().anyMatch(c -> c.hasDependency(otherClassNames));
+                if (hasDep) deps.add(other.name());
+            }
+            graph.put(mod.name(), deps);
+        }
+
+        // DFS to find cycles starting from this module
+        List<List<String>> cycles = new ArrayList<>();
+        findCycles(graph, module.name(), module.name(), new LinkedList<>(), new HashSet<>(), cycles);
+        return cycles;
+    }
+
+    private void findCycles(Map<String, Set<String>> graph, String start, String current,
+                            LinkedList<String> path, Set<String> visited, List<List<String>> cycles) {
+        path.add(current);
+        visited.add(current);
+
+        for (var neighbor : graph.getOrDefault(current, Set.of())) {
+            if (neighbor.equals(start) && path.size() > 1) {
+                var cycle = new ArrayList<>(path);
+                cycle.add(start);
+                cycles.add(cycle);
+            } else if (!visited.contains(neighbor)) {
+                findCycles(graph, start, neighbor, path, visited, cycles);
+            }
+        }
+
+        path.removeLast();
+        visited.remove(current);
     }
 
     public List<MetricsResult> computeMetrics() {

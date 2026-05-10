@@ -571,10 +571,12 @@
       sh += '<div class="diagram-wrapper"><canvas id="distance-chart"></canvas></div></div>';
       sh += '</div>';
       sh += '<div class="card"><div class="card-header"><h3>Module Comparison</h3></div><div class="card-body" style="padding:0;overflow-x:auto;">';
-      sh += '<table class="comparison-table"><thead><tr><th>Module</th><th>Classes</th><th>Lines</th><th>A</th><th>I</th><th>D</th><th>Ca</th><th>Ce</th><th>LCOM4</th><th>Quality</th></tr></thead><tbody>';
+      sh += '<table class="comparison-table"><thead><tr><th>Module</th><th>Classes</th><th>Lines</th><th>API</th><th>Avg CC</th><th>A</th><th>I</th><th>D</th><th>Ca</th><th>Ce</th><th>LCOM4</th><th>Cycles</th><th>Quality</th></tr></thead><tbody>';
       data.forEach(function(d, i) {
         sh += '<tr onclick="switchView(document.querySelectorAll(\'.nav-item\')[' + (i + 1) + '],\'' + d.name.replace(/'/g, "\\'") + '\')">';
-        sh += '<td>' + d.name + '</td><td>' + d.numberOfClasses + '</td><td>' + d.totalLines + '</td><td>' + fmt(d.abstractness) + '</td><td>' + fmt(d.instability) + '</td><td>' + fmt(d.distance) + '</td><td>' + d.ca + '</td><td>' + d.ce + '</td><td>' + fmt(d.lcom4) + '</td><td>' + distBadge(d.distance) + '</td></tr>';
+        var cycleCount = (d.circularDependencies || []).length;
+        var cycleBadge = cycleCount === 0 ? '<span class="badge badge-good">0</span>' : '<span class="badge badge-bad">' + cycleCount + '</span>';
+        sh += '<td>' + d.name + '</td><td>' + d.numberOfClasses + '</td><td>' + d.totalLines + '</td><td>' + d.publicApiSurface + '</td><td>' + fmt(d.averageCyclomaticComplexity) + '</td><td>' + fmt(d.abstractness) + '</td><td>' + fmt(d.instability) + '</td><td>' + fmt(d.distance) + '</td><td>' + d.ca + '</td><td>' + d.ce + '</td><td>' + fmt(d.lcom4) + '</td><td>' + cycleBadge + '</td><td>' + distBadge(d.distance) + '</td></tr>';
       });
       sh += '</tbody></table></div></div>';
       document.getElementById('content-summary').innerHTML = sh;
@@ -586,8 +588,19 @@
         h += tile('Distance', fmt(d.distance)) + tile('Ca (Afferent)', d.ca) + tile('Ce (Efferent)', d.ce);
         h += tile('Avg LCOM4', fmt(d.lcom4)) + tile('Avg Methods/Class', fmt(d.averageMethodsPerClass));
         h += tile('Avg Public Methods', fmt(d.averagePublicMethodsPerClass));
+        h += tile('Public API Surface', d.publicApiSurface);
+        h += tile('Avg Cyclomatic Compl.', fmt(d.averageCyclomaticComplexity));
+        h += tile('Max Cyclomatic Compl.', d.maxCyclomaticComplexity);
         h += tile('Getter/Setter Share', pct(d.shareGetterSetters)) + tile('Local Call Share', pct(d.shareLocalCallMethods));
         h += '</div></div></div>';
+
+        // Circular dependencies warning
+        var cycles = d.circularDependencies || [];
+        if (cycles.length > 0) {
+          h += '<div class="card" style="border-color:var(--red)"><div class="card-header" style="background:var(--red-bg)"><h3 style="color:var(--red)">⚠ Circular Dependencies (' + cycles.length + ')</h3></div><div class="card-body">';
+          cycles.forEach(function(cycle) { h += '<div style="margin-bottom:0.4rem;font-size:0.85rem;font-family:monospace;color:var(--red)">' + cycle.join(' → ') + '</div>'; });
+          h += '</div></div>';
+        }
         h += '<div class="card"><div class="card-header"><h3>Module Dependencies</h3></div>';
         h += '<div class="diagram-wrapper"><canvas id="depgraph-mod-' + i + '"></canvas></div></div>';
         h += '<div class="two-col">';

@@ -34,6 +34,7 @@ public class MethodDescriptor {
     private final Set<String> invokedLocalMethods;
     private final List<MethodInvocation> invokedMethods;
     private int lines;
+    private int cyclomaticComplexity;
 
     public MethodDescriptor(String owner, String fullName, String shortName, Visibility visibility, String name, String returnType, String parameters){
         this.fullName = fullName;
@@ -48,6 +49,7 @@ public class MethodDescriptor {
         this.invokedLocalMethods = new HashSet<>();
         this.invokedMethods = new ArrayList<>();
         this.lines = 0;
+        this.cyclomaticComplexity = 1;
     }
 
     public boolean isPublic(){
@@ -93,6 +95,14 @@ public class MethodDescriptor {
 
     public void incLineCounter() {
         this.lines++;
+    }
+
+    public void incComplexity() {
+        this.cyclomaticComplexity++;
+    }
+
+    public int parameterCount() {
+        return parameters.isEmpty() ? 0 : parameters.split(";").length;
     }
 
     public String fqn(){

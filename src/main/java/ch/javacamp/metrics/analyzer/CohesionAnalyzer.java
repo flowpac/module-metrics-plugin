@@ -115,6 +115,27 @@ public class CohesionAnalyzer {
         }
 
         @Override
+        public void visitJumpInsn(int opcode, Label label) {
+            super.visitJumpInsn(opcode, label);
+            // Each conditional branch adds a path: IF_*, IFNULL, IFNONNULL
+            if (opcode != Opcodes.GOTO) {
+                method.incComplexity();
+            }
+        }
+
+        @Override
+        public void visitTableSwitchInsn(int min, int max, Label dflt, Label... labels) {
+            super.visitTableSwitchInsn(min, max, dflt, labels);
+            method.incComplexity(); // +1 per switch (cases are branches)
+        }
+
+        @Override
+        public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
+            super.visitLookupSwitchInsn(dflt, keys, labels);
+            method.incComplexity();
+        }
+
+        @Override
         public void visitEnd() {
             super.visitEnd();
         }

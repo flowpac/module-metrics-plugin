@@ -62,6 +62,33 @@ public record ModuleDescriptor(String name, Set<ClassDescriptor> classes) {
                 .sum();
     }
 
+    public long publicApiSurface() {
+        return classes.stream()
+                .filter(c -> c.visibility() == Visibility.PUBLIC)
+                .flatMap(c -> c.methods().stream())
+                .filter(m -> !m.isConstructor() && m.isPublic())
+                .count();
+    }
+
+    public double averageCyclomaticComplexity() {
+        var methods = classes.stream()
+                .flatMap(c -> c.methods().stream())
+                .filter(m -> !m.isSpecialMethod())
+                .filter(m -> m.lines() > 0)
+                .toList();
+        if (methods.isEmpty()) return 0d;
+        var sum = methods.stream().mapToInt(MethodDescriptor::cyclomaticComplexity).sum();
+        return (double) sum / methods.size();
+    }
+
+    public int maxCyclomaticComplexity() {
+        return classes.stream()
+                .flatMap(c -> c.methods().stream())
+                .filter(m -> !m.isSpecialMethod())
+                .mapToInt(MethodDescriptor::cyclomaticComplexity)
+                .max().orElse(0);
+    }
+
 
 
 }

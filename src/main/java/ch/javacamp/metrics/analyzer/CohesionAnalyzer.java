@@ -80,11 +80,13 @@ public class CohesionAnalyzer {
 
         private final String owner;
         private final MethodDescriptor method;
+        private boolean inBranch;
 
         CohesionMethodAnalyzer(String owner, MethodDescriptor method){
             super(Opcodes.ASM9);
             this.owner = owner;
             this.method = method;
+            this.inBranch = false;
         }
 
         @Override
@@ -106,6 +108,7 @@ public class CohesionAnalyzer {
                     .clazz(AsmUtils.transformClassName(owner))
                     .isLocal(this.owner.equals(owner))
                     .shortName(generateShortMethodName(name, descriptor))
+                    .conditional(inBranch)
                     .build());
         }
 
@@ -117,22 +120,24 @@ public class CohesionAnalyzer {
         @Override
         public void visitJumpInsn(int opcode, Label label) {
             super.visitJumpInsn(opcode, label);
-            // Each conditional branch adds a path: IF_*, IFNULL, IFNONNULL
             if (opcode != Opcodes.GOTO) {
                 method.incComplexity();
+                inBranch = true;
             }
         }
 
         @Override
         public void visitTableSwitchInsn(int min, int max, Label dflt, Label... labels) {
             super.visitTableSwitchInsn(min, max, dflt, labels);
-            method.incComplexity(); // +1 per switch (cases are branches)
+            method.incComplexity();
+            inBranch = true;
         }
 
         @Override
         public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
             super.visitLookupSwitchInsn(dflt, keys, labels);
             method.incComplexity();
+            inBranch = true;
         }
 
         @Override

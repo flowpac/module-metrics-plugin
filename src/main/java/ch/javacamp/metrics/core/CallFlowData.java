@@ -53,6 +53,7 @@ public class CallFlowData {
         private final String targetModule;
         private final String targetMethod;
         private final boolean interfaceCall;
+        private final boolean conditional;
         private final List<ImplementationOption> implementations;
     }
 
@@ -66,4 +67,3 @@ public class CallFlowData {
         private final String moduleName;
     }
 }
-

@@ -13,6 +13,12 @@ public class MethodInvocation {
     private String clazz;
     private String shortName;
 
+    public String getClazz() {
+        return clazz;
+    }
+
+    private boolean conditional;
+
     public String fqn(){
         return String.format("%s#%s", clazz, shortName);
     }

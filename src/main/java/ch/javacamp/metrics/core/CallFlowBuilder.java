@@ -103,6 +103,7 @@ public class CallFlowBuilder {
                         .targetModule(targetModule)
                         .targetMethod(inv.shortName())
                         .interfaceCall(isInterfaceCall)
+                        .conditional(inv.conditional())
                         .implementations(implOptions)
                         .build());
             }
@@ -167,4 +168,3 @@ public class CallFlowBuilder {
         return dot >= 0 ? fqn.substring(dot + 1) : fqn;
     }
 }
-

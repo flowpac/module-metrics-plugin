@@ -524,7 +524,7 @@
               h += '</div></div>';
             } else {
               h += '<div class="flow-node">';
-              h += buildFlowTree(t.targetFqn, depth+1, visited, expanded, stats, false, childCondTag);
+              h += buildFlowTree(t.targetFqn, depth+1, shallowCopy(visited), expanded, stats, false, childCondTag);
               h += '</div>';
             }
           }

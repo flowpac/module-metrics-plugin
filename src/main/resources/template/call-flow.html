@@ -231,16 +231,55 @@
       function applyFilter() {
         var q = document.getElementById('search-input').value.toLowerCase();
         var pubOnly = document.getElementById('filter-public').checked;
+        var hasQuery = q.length > 0;
+
+        // 1. Filter methods: prefix match on method name, visibility filter
         document.querySelectorAll('.nav-method').forEach(function(btn) {
-          var matchText = !q || btn.dataset.fqn.toLowerCase().indexOf(q) >= 0;
+          // Extract method name (part after #, before '(')
+          var fqn = btn.dataset.fqn.toLowerCase();
+          var hash = fqn.indexOf('#');
+          var methodName = hash >= 0 ? fqn.substring(hash + 1) : fqn;
+          var matchText = !hasQuery || methodName.indexOf(q) === 0;
           var matchVis = !pubOnly || btn.dataset.vis === 'PUBLIC';
           btn.style.display = (matchText && matchVis) ? '' : 'none';
         });
-        if(q) {
-          document.querySelectorAll('.nav-section').forEach(function(s){ s.classList.add('open'); });
-          document.querySelectorAll('.nav-group').forEach(function(g){ g.classList.add('open'); });
-          document.querySelectorAll('.nav-class').forEach(function(c){ c.classList.add('open'); });
-          document.querySelectorAll('.nav-methods').forEach(function(m){ m.classList.add('open'); });
+
+        // 2. Hide classes with no visible methods
+        document.querySelectorAll('.nav-class').forEach(function(cls) {
+          var methodsContainer = document.getElementById(cls.dataset.methods);
+          if (!methodsContainer) return;
+          var hasVisible = Array.from(methodsContainer.querySelectorAll('.nav-method')).some(function(btn) {
+            return btn.style.display !== 'none';
+          });
+          cls.style.display = hasVisible ? '' : 'none';
+          methodsContainer.style.display = hasVisible ? '' : 'none';
+          if (hasQuery && hasVisible) {
+            cls.classList.add('open');
+            methodsContainer.classList.add('open');
+          }
+        });
+
+        // 3. Hide modules with no visible classes
+        document.querySelectorAll('.nav-section').forEach(function(sec) {
+          var group = document.getElementById(sec.dataset.group);
+          if (!group) return;
+          var hasVisible = Array.from(group.querySelectorAll('.nav-class')).some(function(cls) {
+            return cls.style.display !== 'none';
+          });
+          sec.style.display = hasVisible ? '' : 'none';
+          group.style.display = hasVisible ? '' : 'none';
+          if (hasQuery && hasVisible) {
+            sec.classList.add('open');
+            group.classList.add('open');
+          }
+        });
+
+        // When search is cleared, reset display but keep toggle state
+        if (!hasQuery && !pubOnly) {
+          document.querySelectorAll('.nav-section').forEach(function(s){ s.style.display = ''; });
+          document.querySelectorAll('.nav-group').forEach(function(g){ g.style.display = ''; });
+          document.querySelectorAll('.nav-class').forEach(function(c){ c.style.display = ''; });
+          document.querySelectorAll('.nav-methods').forEach(function(m){ m.style.display = ''; });
         }
       }
       document.getElementById('search-input').addEventListener('input', applyFilter);

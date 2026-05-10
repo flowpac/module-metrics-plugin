@@ -111,11 +111,12 @@ public class Modules {
         var classNamesCurrentModule = module.allClassNames();
         List<MetricsResult.ModuleCoupling> result = new ArrayList<>();
         for (var other : otherModules(module)) {
-            long count = other.classes().stream()
+            List<String> coupledClassNames = other.classes().stream()
                     .filter(c -> c.hasDependency(classNamesCurrentModule))
-                    .count();
-            if (count > 0) {
-                result.add(new MetricsResult.ModuleCoupling(other.name(), count));
+                    .map(ClassDescriptor::className)
+                    .collect(Collectors.toList());
+            if (!coupledClassNames.isEmpty()) {
+                result.add(new MetricsResult.ModuleCoupling(other.name(), coupledClassNames.size(), coupledClassNames));
             }
         }
         return result;
@@ -125,11 +126,12 @@ public class Modules {
         List<MetricsResult.ModuleCoupling> result = new ArrayList<>();
         for (var other : otherModules(module)) {
             var otherClassNames = other.allClassNames();
-            long count = module.classes().stream()
+            List<String> coupledClassNames = module.classes().stream()
                     .filter(c -> c.hasDependency(otherClassNames))
-                    .count();
-            if (count > 0) {
-                result.add(new MetricsResult.ModuleCoupling(other.name(), count));
+                    .map(ClassDescriptor::className)
+                    .collect(Collectors.toList());
+            if (!coupledClassNames.isEmpty()) {
+                result.add(new MetricsResult.ModuleCoupling(other.name(), coupledClassNames.size(), coupledClassNames));
             }
         }
         return result;

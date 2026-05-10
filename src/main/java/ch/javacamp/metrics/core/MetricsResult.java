@@ -54,6 +54,7 @@ public class MetricsResult {
     public static class ModuleCoupling {
         private final String moduleName;
         private final long classCount;
+        private final List<String> classNames;
     }
 
     @Builder

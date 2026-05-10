@@ -16,6 +16,7 @@ public class LineCountCalculator {
                 .flatMap(x -> x.methods().stream())
                 .filter(Predicate.not(MethodDescriptor::isSpecialMethod))
                 .map(MethodDescriptor::lines)
+                .filter(lines -> lines > 0)
                 .forEach(stats::addValue);
 
         return new LineCountResult(stats);

@@ -59,9 +59,9 @@ public class Modules {
 
         var ca = outsideClassesWithDependenciesToMe.size();
         var ce = classesWithForeignDependencies.size();
-        var i = (double) ce / (double) (ce + ca);
+        var i = (ca + ce) == 0 ? 0d : (double) ce / (double) (ce + ca);
         var a = module.abstractness();
-        var d = Math.abs((a + i - 1) / 2.0);
+        var d = Math.abs(a + i - 1);
         var lcom4 = module.averageLCOM4();
         var shareOfGetterSetters = module.shareOfGetterSetters();
         var shareOfMethodsWithLocalCalls = module.shareOfMethodsWithLocalCalls();

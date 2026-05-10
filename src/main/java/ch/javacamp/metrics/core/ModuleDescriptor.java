@@ -1,7 +1,6 @@
 package ch.javacamp.metrics.core;
 
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public record ModuleDescriptor(String name, Set<ClassDescriptor> classes) {
@@ -24,8 +23,14 @@ public record ModuleDescriptor(String name, Set<ClassDescriptor> classes) {
     }
 
     public double averageLCOM4(){
-        var sumLCOM4 = classes.stream().map(ClassDescriptor::lcom4).reduce(Integer::sum).orElse(0);
-        return (double) sumLCOM4 / (double) classes.size();
+        var relevantClasses = classes.stream()
+                .filter(c -> !c.getFilteredMethods().isEmpty())
+                .toList();
+        if (relevantClasses.isEmpty()) {
+            return 0d;
+        }
+        var sumLCOM4 = relevantClasses.stream().map(ClassDescriptor::lcom4).reduce(Integer::sum).orElse(0);
+        return (double) sumLCOM4 / (double) relevantClasses.size();
     }
 
     public double shareOfGetterSetters(){
@@ -50,13 +55,6 @@ public record ModuleDescriptor(String name, Set<ClassDescriptor> classes) {
         return (double) methods / (double) totalClasses();
     }
 
-    public double averageLinesPerMethod(){
-        return classes.stream()
-                .filter(Predicate.not(ClassDescriptor::isAbstract))
-                .map(ClassDescriptor::averageLinesPerMethod)
-                .reduce(Double::sum)
-                .orElse(0d) / classes.size();
-    }
 
 
 }

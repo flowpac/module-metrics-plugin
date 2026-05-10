@@ -6,11 +6,16 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.signature.SignatureReader;
+import org.objectweb.asm.signature.SignatureVisitor;
+import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -28,6 +33,18 @@ public class DependencyAnalyzer {
         dependentClasses.addAll(extractSuperclassAndInterfaces(classNode));
         // Extract field types
         dependentClasses.addAll(extractFields(classNode));
+        // Extract class-level annotations
+        dependentClasses.addAll(extractAnnotations(classNode.visibleAnnotations));
+        dependentClasses.addAll(extractAnnotations(classNode.invisibleAnnotations));
+        // Extract generic type parameters from class signature
+        dependentClasses.addAll(extractSignatureTypes(classNode.signature));
+
+        // Extract field-level annotations and generic signatures
+        for (FieldNode field : classNode.fields) {
+            dependentClasses.addAll(extractAnnotations(field.visibleAnnotations));
+            dependentClasses.addAll(extractAnnotations(field.invisibleAnnotations));
+            dependentClasses.addAll(extractSignatureTypes(field.signature));
+        }
 
         // Extract types in methods
         for (MethodNode method : classNode.methods) {
@@ -41,6 +58,14 @@ public class DependencyAnalyzer {
             dependentClasses.addAll(extractLocalVariable(method));
             // Extract instruction types
             dependentClasses.addAll(extractMethodInstructionTypes(method));
+            // Extract method-level annotations
+            dependentClasses.addAll(extractAnnotations(method.visibleAnnotations));
+            dependentClasses.addAll(extractAnnotations(method.invisibleAnnotations));
+            // Extract parameter annotations
+            dependentClasses.addAll(extractParameterAnnotations(method.visibleParameterAnnotations));
+            dependentClasses.addAll(extractParameterAnnotations(method.invisibleParameterAnnotations));
+            // Extract generic type parameters from method signature
+            dependentClasses.addAll(extractSignatureTypes(method.signature));
         }
 
         var ownName = transformClassName(classNode.name);
@@ -69,6 +94,16 @@ public class DependencyAnalyzer {
             instr.accept(new MethodVisitor(Opcodes.ASM9) {
                 @Override
                 public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
+                    dependentClasses.add(transformClassName(owner));
+                }
+
+                @Override
+                public void visitTypeInsn(int opcode, String type) {
+                    dependentClasses.add(transformClassName(type));
+                }
+
+                @Override
+                public void visitFieldInsn(int opcode, String owner, String name, String descriptor) {
                     dependentClasses.add(transformClassName(owner));
                 }
             });
@@ -127,6 +162,40 @@ public class DependencyAnalyzer {
             return addType(type.getElementType());
         }
         return Optional.empty();
+    }
+
+    private Set<String> extractAnnotations(List<AnnotationNode> annotations) {
+        if (annotations == null) {
+            return Set.of();
+        }
+        return annotations.stream()
+                .map(a -> Type.getType(a.desc).getClassName())
+                .collect(Collectors.toSet());
+    }
+
+    private Set<String> extractParameterAnnotations(List<AnnotationNode>[] parameterAnnotations) {
+        if (parameterAnnotations == null) {
+            return Set.of();
+        }
+        Set<String> result = new HashSet<>();
+        for (List<AnnotationNode> annotations : parameterAnnotations) {
+            result.addAll(extractAnnotations(annotations));
+        }
+        return result;
+    }
+
+    private Set<String> extractSignatureTypes(String signature) {
+        if (signature == null) {
+            return Set.of();
+        }
+        Set<String> result = new HashSet<>();
+        new SignatureReader(signature).accept(new SignatureVisitor(Opcodes.ASM9) {
+            @Override
+            public void visitClassType(String name) {
+                result.add(transformClassName(name));
+            }
+        });
+        return result;
     }
 
     private boolean isAbstract(ClassNode classNode) {

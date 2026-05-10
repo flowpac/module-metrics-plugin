@@ -19,7 +19,7 @@ public class Renderer {
     public void render(Path outputFile, List<MetricsResult> results) {
         try (var is = getClass().getClassLoader().getResourceAsStream(HTML_TEMPLATE)) {
             Objects.requireNonNull(is);
-            var template = IOUtils.toString(is);
+            var template = IOUtils.toString(is, "UTF-8");
             template = template.replace("##data##", gson.toJson(results));
             Files.writeString(outputFile, template);
         } catch (Exception e) {

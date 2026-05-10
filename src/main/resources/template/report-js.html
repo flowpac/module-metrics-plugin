@@ -2,190 +2,488 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OO Design Quality Metrics</title>
     <link rel="icon" type="image/png" sizes="16x16" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAMFBMVEU0OkArMjhobHEoPUPFEBIuO0L+AAC2FBZ2JyuNICOfGx7xAwTjCAlCNTvVDA1aLzQ3COjMAAAAVUlEQVQI12NgwAaCDSA0888GCItjn0szWGBJTVoGSCjWs8TleQCQYV95evdxkFT8Kpe0PLDi5WfKd4LUsN5zS1sKFolt8bwAZrCaGqNYJAgFDEpQAAAzmxafI4vZWwAAAABJRU5ErkJggg==" />
     <style>
+      :root {
+        --bg: #f5f7fa;
+        --surface: #ffffff;
+        --surface-alt: #f0f2f5;
+        --text: #1a1a2e;
+        --text-secondary: #64748b;
+        --accent: #4f46e5;
+        --accent-light: #e0e7ff;
+        --border: #e2e8f0;
+        --green: #16a34a;
+        --green-bg: #dcfce7;
+        --yellow: #ca8a04;
+        --yellow-bg: #fef9c3;
+        --red: #dc2626;
+        --red-bg: #fee2e2;
+        --radius: 12px;
+        --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+        --nav-width: 220px;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
       body {
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
-          Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue',
-          sans-serif;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
       }
 
-      .name {
-        font-weight: bolder;
-        min-width: 200px;
-        width: 30%;
+      /* Layout: fixed sidebar + scrollable main */
+      .layout {
+        display: flex;
+        min-height: 100vh;
       }
 
-      .value {
-        width: 70%;
+      /* Sidebar */
+      .sidebar {
+        width: var(--nav-width);
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        position: fixed;
+        top: 0; left: 0; bottom: 0;
+        overflow-y: auto;
+        z-index: 10;
+      }
+      .sidebar-header {
+        padding: 1.25rem 1rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .sidebar-header h1 {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--accent);
+        letter-spacing: -0.01em;
+      }
+      .sidebar-header p {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        margin-top: 0.15rem;
+      }
+      .nav-section {
+        padding: 0.75rem 0.75rem 0.25rem;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-secondary);
+      }
+      .nav-item {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 0.5rem 1rem;
+        border: none;
+        background: none;
+        font-size: 0.85rem;
+        color: var(--text);
+        cursor: pointer;
+        border-radius: 6px;
+        margin: 1px 0.5rem;
+        width: calc(100% - 1rem);
+        transition: all 0.15s;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .nav-item:hover {
+        background: var(--surface-alt);
+        color: var(--accent);
+      }
+      .nav-item.active {
+        background: var(--accent-light);
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .nav-item .nav-badge {
+        float: right;
+        font-size: 0.65rem;
+        padding: 0.1rem 0.4rem;
+        border-radius: 999px;
+        font-weight: 600;
+      }
+
+      /* Main content */
+      .main {
+        margin-left: var(--nav-width);
+        flex: 1;
+        min-width: 0;
+      }
+      .main-header {
+        background: var(--accent);
+        color: white;
+        padding: 1.5rem 2rem;
+      }
+      .main-header h2 {
+        font-size: 1.35rem;
+        font-weight: 700;
+      }
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 1.5rem;
+      }
+
+      .tab-content { display: none; }
+      .tab-content.active { display: block; }
+
+      .card {
+        background: var(--surface); border-radius: var(--radius);
+        box-shadow: var(--shadow); border: 1px solid var(--border);
+        margin-bottom: 1.5rem; overflow: hidden;
+      }
+      .card-header {
+        padding: 1rem 1.5rem; border-bottom: 1px solid var(--border);
+        display: flex; align-items: center; justify-content: space-between;
+      }
+      .card-header h3 { font-size: 1rem; font-weight: 600; }
+      .card-body { padding: 1.5rem; }
+
+      .metrics-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem;
+      }
+      .metric-tile {
+        background: var(--surface-alt); border-radius: 8px; padding: 0.85rem;
+        display: flex; flex-direction: column; gap: 0.2rem;
+      }
+      .metric-tile .label {
+        font-size: 0.7rem; font-weight: 500; color: var(--text-secondary);
+        text-transform: uppercase; letter-spacing: 0.04em;
+      }
+      .metric-tile .value { font-size: 1.35rem; font-weight: 700; }
+
+      .badge {
+        display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px;
+        font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;
+      }
+      .badge-good { background: var(--green-bg); color: var(--green); }
+      .badge-warn { background: var(--yellow-bg); color: var(--yellow); }
+      .badge-bad  { background: var(--red-bg); color: var(--red); }
+
+      .stats-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+      .stats-table th {
+        text-align: left; padding: 0.5rem 1rem; background: var(--surface-alt);
+        color: var(--text-secondary); font-weight: 600; font-size: 0.7rem;
+        text-transform: uppercase; letter-spacing: 0.04em;
+      }
+      .stats-table td { padding: 0.5rem 1rem; border-top: 1px solid var(--border); }
+      .stats-table tr:hover td { background: var(--surface-alt); }
+
+      .diagram-wrapper { display: flex; justify-content: center; padding: 1rem; }
+      canvas { max-width: 100%; height: auto; }
+
+      .comparison-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+      .comparison-table th {
+        text-align: left; padding: 0.6rem 0.75rem; background: var(--accent);
+        color: white; font-weight: 600; font-size: 0.75rem; letter-spacing: 0.03em;
+      }
+      .comparison-table td { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
+      .comparison-table tbody tr { cursor: pointer; }
+      .comparison-table tbody tr:hover td { background: var(--accent-light); }
+      .comparison-table td:first-child { font-weight: 600; }
+
+      .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+
+      @media (max-width: 900px) {
+        .sidebar { display: none; }
+        .main { margin-left: 0; }
+        .two-col { grid-template-columns: 1fr; }
+        .metrics-grid { grid-template-columns: repeat(2, 1fr); }
       }
     </style>
   </head>
   <body>
-    <script>
-      function drawDiagram(name) {
-        const canvas = document.getElementById(name);
-        const ctx = canvas.getContext('2d');
-
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(50, 50);
-        ctx.lineTo(50, 500);
-        ctx.lineTo(500, 500);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(450, 500);
-        ctx.lineTo(50, 100);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.lineWidth = 5;
-        ctx.arc(50, 100, 3, 0 * Math.PI, 2 * Math.PI);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.lineWidth = 5;
-        ctx.arc(450, 500, 3, 0 * Math.PI, 2 * Math.PI);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.lineWidth = 2;
-        ctx.arc(50, 500, 200, 1.5 * Math.PI, 2 * Math.PI);
-        ctx.stroke();
-
-        ctx.font = '22px serif';
-        ctx.fillText('Instability', 230, 520);
-        ctx.save();
-
-        ctx.font = '22px serif';
-        ctx.fillText('Zone of Pain', 70, 450);
-        ctx.save();
-
-        ctx.rotate(-Math.PI / 2);
-        ctx.font = '22px serif';
-        ctx.fillText('Abstractness', -350, 40);
-        ctx.restore();
-
-        ctx.font = '15px serif';
-        ctx.fillText('(0,1)', 10, 100);
-        ctx.fillText('(1,0)', 450, 520);
-
-      }
-
-      function drawComponent(name, abstractness, instability) {
-        const canvas = document.getElementById(name)
-        const ctx = canvas.getContext('2d')
-        ctx.beginPath()
-        ctx.strokeStyle = 'red'
-        ctx.arc(
-          50 + instability * 400,
-          500 - 400 * abstractness,
-          5,
-          0,
-          2 * Math.PI
-        )
-        ctx.stroke();
-
-      }
-    </script>
-
-    <h1>OO Design Quality Metrics</h1>
-
-    <template id="module-block">
-      <h2></h2>
-      <table>
-
-      </table>
-      <canvas id="" width="550" height="550"></canvas>
-    </template>
-
-    <template id="data-row">
-      <tr>
-        <td class="name">Lines per Method</td>
-        <td class="value"></td>
-      </tr>
-    </template>
-
-    <h2>Summary</h2>
-    <canvas id="summary-diagram" width="550" height="550"></canvas>
+    <div class="layout">
+      <nav class="sidebar" id="sidebar"></nav>
+      <div class="main">
+        <div class="main-header"><h2 id="page-title">Summary</h2></div>
+        <div class="container" id="tab-contents"></div>
+      </div>
+    </div>
 
     <script>
-      let testdata = [
-        {
-          name: "j-mod-1",
-          classes: 10,
-          abstractness: 0.0,
-          ca: 1,
-          ce: 2,
-          instability: 1.0,
-          distance: 0.3
-        },
-        {
-          name: "j-mod-2",
-          classes: 14,
-          abstractness: 0.4,
-          ca: 1,
-          ce: 2,
-          instability: 0.3,
-          distance: 0.3
-        }
+      var COLORS = [
+        '#4f46e5', '#0891b2', '#059669', '#d97706', '#dc2626',
+        '#7c3aed', '#db2777', '#2563eb', '#65a30d', '#ea580c'
       ];
 
-      let data = ##data##;
+      var data = ##data##;
 
-      function addDataRow(table, name, value){
-        const template = document.querySelector('#data-row')
-        const tr = template.content.cloneNode(true)
-        let td = tr.querySelectorAll('td')
-        td[0].textContent = name;
-        td[1].textContent = value;
-        table.appendChild(tr);
+      function fmt(v, d) { return (v == null || isNaN(v)) ? '–' : Number(v).toFixed(d == null ? 2 : d); }
+      function pct(v) { return (v == null || isNaN(v)) ? '–' : (v * 100).toFixed(1) + '%'; }
+      function distBadge(d) {
+        if (d <= 0.3) return '<span class="badge badge-good">Good</span>';
+        if (d <= 0.6) return '<span class="badge badge-warn">Fair</span>';
+        return '<span class="badge badge-bad">Poor</span>';
+      }
+      function distColor(d) {
+        if (d <= 0.3) return '#16a34a';
+        if (d <= 0.6) return '#ca8a04';
+        return '#dc2626';
       }
 
-      data.forEach(d => {
-        const template = document.querySelector('#module-block')
-        const clone = template.content.cloneNode(true)
+      // --- A/I Diagram ---
+      function drawDiagram(canvasId, modules) {
+        var canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        var dpr = window.devicePixelRatio || 1;
+        var w = 500, h = 500;
+        canvas.width = w * dpr; canvas.height = h * dpr;
+        canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+        var ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
 
-        let title = clone.querySelectorAll('h2')
-        title[0].textContent = d.name;
+        var pad = { top: 40, right: 60, bottom: 50, left: 60 };
+        var pw = w - pad.left - pad.right, ph = h - pad.top - pad.bottom;
 
-        let table = clone.querySelectorAll('table')[0];
+        ctx.fillStyle = '#fafbfc'; ctx.fillRect(0, 0, w, h);
 
-        addDataRow(table, "Number of Classes", d.numberOfClasses);
-        addDataRow(table, "Abstractness", d.abstractness.toFixed(2));
-        addDataRow(table, "Afferent Couplings (Ca)", d.ca.toFixed(0));
-        addDataRow(table, "Efferent Couplings (Ce)", d.ce.toFixed(0));
-        addDataRow(table, "Instability", d.instability.toFixed(2));
-        addDataRow(table, "Distance", d.distance.toFixed(2));
-        addDataRow(table, "Average Methods per Class", d.averageMethodsPerClass.toFixed(2));
-        addDataRow(table, "Average Public Methods per Class", d.averagePublicMethodsPerClass.toFixed(2));
-        addDataRow(table, "Average LCOM4", d.lcom4.toFixed(2));
-        addDataRow(table, "Share of Getters/Setters", (d.shareGetterSetters * 100).toFixed(2) + "%");
-        addDataRow(table, "Share of methods with local calls", (d.shareLocalCallMethods * 100).toFixed(2) + "%");
+        // Zone of Pain
+        ctx.fillStyle = 'rgba(220,38,38,0.06)';
+        ctx.beginPath();
+        ctx.moveTo(pad.left, pad.top + ph);
+        ctx.lineTo(pad.left + pw * 0.35, pad.top + ph);
+        ctx.lineTo(pad.left, pad.top + ph * 0.65);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = 'rgba(220,38,38,0.3)';
+        ctx.font = '10px system-ui';
+        ctx.textAlign = 'left';
+        ctx.fillText('Zone of Pain', pad.left + 8, pad.top + ph - 15);
 
-        addDataRow(table, "Mean Lines per Method", d.methodStatistics.mean.toFixed(2));
-        addDataRow(table, "Median Lines per Method", d.methodStatistics.median.toFixed(2));
-        addDataRow(table, "Lines per Method Percentile 25", d.methodStatistics.percentile25.toFixed(2));
-        addDataRow(table, "Lines per Method Percentile 75", d.methodStatistics.percentile75.toFixed(2));
-        addDataRow(table, "Lines per Method Percentile 80", d.methodStatistics.percentile80.toFixed(2));
-        addDataRow(table, "Lines per Method Percentile 90", d.methodStatistics.percentile90.toFixed(2));
-        addDataRow(table, "Lines per Method Percentile 95", d.methodStatistics.percentile95.toFixed(2));
-        addDataRow(table, "Lines per Method Percentile 99", d.methodStatistics.percentile99.toFixed(2));
+        // Zone of Uselessness
+        ctx.fillStyle = 'rgba(202,138,4,0.06)';
+        ctx.beginPath();
+        ctx.moveTo(pad.left + pw * 0.65, pad.top);
+        ctx.lineTo(pad.left + pw, pad.top);
+        ctx.lineTo(pad.left + pw, pad.top + ph * 0.35);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = 'rgba(202,138,4,0.3)';
+        ctx.textAlign = 'right';
+        ctx.fillText('Zone of Uselessness', pad.left + pw - 5, pad.top + 20);
 
-        let canvas = clone.querySelectorAll('canvas')
-        canvas[0].id = "c-"+d.name;
-        template.parentElement.appendChild(clone);
-        drawDiagram(canvas[0].id);
-        drawComponent(canvas[0].id, d.abstractness, d.instability);
+        // Grid
+        ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 1;
+        for (var i = 0; i <= 4; i++) {
+          var gx = pad.left + (pw / 4) * i, gy = pad.top + (ph / 4) * i;
+          ctx.beginPath(); ctx.moveTo(gx, pad.top); ctx.lineTo(gx, pad.top + ph); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(pad.left, gy); ctx.lineTo(pad.left + pw, gy); ctx.stroke();
+        }
+
+        // Axes
+        ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, pad.top + ph); ctx.lineTo(pad.left + pw, pad.top + ph); ctx.stroke();
+
+        // Main Sequence
+        ctx.lineWidth = 1; ctx.setLineDash([6, 4]);
+        ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left + pw, pad.top + ph); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#94a3b8'; ctx.font = '10px system-ui';
+        ctx.save();
+        ctx.translate(pad.left + pw / 2 - 30, pad.top + ph / 2 + 5);
+        ctx.rotate(Math.atan2(ph, pw));
+        ctx.fillText('Main Sequence', 0, -8);
+        ctx.restore();
+
+        // Axis labels
+        ctx.fillStyle = '#64748b'; ctx.font = '11px system-ui'; ctx.textAlign = 'center';
+        ctx.fillText('Instability (I)', pad.left + pw / 2, h - 8);
+        for (var i = 0; i <= 4; i++) ctx.fillText((i * 0.25).toFixed(2), pad.left + (pw / 4) * i, pad.top + ph + 18);
+        ctx.save(); ctx.translate(14, pad.top + ph / 2); ctx.rotate(-Math.PI / 2);
+        ctx.fillText('Abstractness (A)', 0, 0); ctx.restore();
+        ctx.textAlign = 'right';
+        for (var i = 0; i <= 4; i++) ctx.fillText((1 - i * 0.25).toFixed(2), pad.left - 6, pad.top + (ph / 4) * i + 4);
+        ctx.textAlign = 'left';
+
+        // Points with smart label placement
+        modules.forEach(function(d, idx) {
+          var x = pad.left + d.instability * pw;
+          var y = pad.top + (1 - d.abstractness) * ph;
+          var color = COLORS[idx % COLORS.length];
+
+          // Draw point
+          ctx.beginPath(); ctx.fillStyle = color;
+          ctx.arc(x, y, 6, 0, 2 * Math.PI); ctx.fill();
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+
+          // Smart label positioning
+          var label = d.name.length > 18 ? d.name.substring(0, 16) + '…' : d.name;
+          ctx.font = 'bold 11px system-ui';
+          var labelW = ctx.measureText(label).width;
+          var lx, ly;
+
+          // Prefer right, but flip to left if too close to right edge
+          if (x + 12 + labelW > pad.left + pw + pad.right - 5) {
+            lx = x - 12 - labelW;
+          } else {
+            lx = x + 12;
+          }
+          // Prefer above, but flip below if too close to top
+          if (y - 12 < pad.top + 5) {
+            ly = y + 18;
+          } else {
+            ly = y - 10;
+          }
+
+          ctx.fillStyle = color;
+          ctx.textAlign = 'left';
+          ctx.fillText(label, lx, ly);
+        });
+      }
+
+      // --- Distance bar chart (canvas-based for uniform alignment) ---
+      function drawDistanceChart(canvasId) {
+        var canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        var dpr = window.devicePixelRatio || 1;
+
+        var rowH = 32;
+        var labelAreaW = 180;
+        var barAreaW = 300;
+        var valueW = 55;
+        var padLeft = 10, padTop = 10, padBottom = 10;
+        var w = padLeft + labelAreaW + barAreaW + valueW + 10;
+        var h = padTop + data.length * rowH + padBottom;
+
+        canvas.width = w * dpr; canvas.height = h * dpr;
+        canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+        var ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+
+        ctx.fillStyle = '#fafbfc'; ctx.fillRect(0, 0, w, h);
+
+        data.forEach(function(d, i) {
+          var y = padTop + i * rowH;
+          var barY = y + 6;
+          var barH = rowH - 12;
+          var barW = Math.max(2, Math.min(d.distance, 1) * barAreaW);
+          var color = distColor(d.distance);
+
+          // Zebra
+          if (i % 2 === 0) {
+            ctx.fillStyle = '#f8f9fb';
+            ctx.fillRect(0, y, w, rowH);
+          }
+
+          // Label (right-aligned in fixed area)
+          ctx.fillStyle = '#64748b';
+          ctx.font = '12px system-ui';
+          ctx.textAlign = 'right';
+          var label = d.name.length > 22 ? d.name.substring(0, 20) + '…' : d.name;
+          ctx.fillText(label, padLeft + labelAreaW - 10, y + rowH / 2 + 4);
+
+          // Bar track
+          ctx.fillStyle = '#e5e7eb';
+          ctx.beginPath();
+          ctx.roundRect(padLeft + labelAreaW, barY, barAreaW, barH, 3);
+          ctx.fill();
+
+          // Bar fill
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.roundRect(padLeft + labelAreaW, barY, barW, barH, 3);
+          ctx.fill();
+
+          // Value
+          ctx.fillStyle = '#1a1a2e';
+          ctx.font = 'bold 12px system-ui';
+          ctx.textAlign = 'left';
+          ctx.fillText(fmt(d.distance), padLeft + labelAreaW + barAreaW + 8, y + rowH / 2 + 4);
+        });
+      }
+
+      // --- Helpers ---
+      function tile(l, v) { return '<div class="metric-tile"><span class="label">' + l + '</span><span class="value">' + v + '</span></div>'; }
+      function sRow(l, v) { return '<tr><td>' + l + '</td><td style="font-weight:600">' + v + '</td></tr>'; }
+
+      // --- Build Sidebar ---
+      var sidebarEl = document.getElementById('sidebar');
+      var contentsEl = document.getElementById('tab-contents');
+
+      var sideHtml = '<div class="sidebar-header"><h1>OO Metrics</h1><p>Design Quality Report</p></div>';
+      sideHtml += '<div class="nav-section">Overview</div>';
+      sideHtml += '<button class="nav-item active" data-target="content-summary" onclick="switchView(this, \'Summary\')">Summary</button>';
+      sideHtml += '<div class="nav-section">Modules (' + data.length + ')</div>';
+      data.forEach(function(d, i) {
+        var bc = d.distance <= 0.3 ? 'badge-good' : d.distance <= 0.6 ? 'badge-warn' : 'badge-bad';
+        sideHtml += '<button class="nav-item" data-target="content-mod-' + i + '" onclick="switchView(this, \'' + d.name.replace(/'/g, "\\'") + '\')" title="' + d.name + '">';
+        sideHtml += d.name;
+        sideHtml += '<span class="nav-badge ' + bc + '">' + fmt(d.distance) + '</span>';
+        sideHtml += '</button>';
+      });
+      sidebarEl.innerHTML = sideHtml;
+
+      // Create content containers
+      var sumDiv = document.createElement('div');
+      sumDiv.id = 'content-summary';
+      sumDiv.className = 'tab-content active';
+      contentsEl.appendChild(sumDiv);
+      data.forEach(function(d, i) {
+        var div = document.createElement('div');
+        div.id = 'content-mod-' + i;
+        div.className = 'tab-content';
+        contentsEl.appendChild(div);
       });
 
-      drawDiagram("summary-diagram");
-      data.forEach(d => {
-        drawComponent("summary-diagram", d.abstractness, d.instability);
+      function switchView(btn, title) {
+        document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+        document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.target).classList.add('active');
+        document.getElementById('page-title').textContent = title;
+      }
+
+      // --- Summary Content ---
+      var sh = '<div class="two-col">';
+      sh += '<div class="card"><div class="card-header"><h3>Abstractness / Instability</h3></div>';
+      sh += '<div class="diagram-wrapper"><canvas id="summary-diagram"></canvas></div></div>';
+      sh += '<div class="card"><div class="card-header"><h3>Distance from Main Sequence</h3></div>';
+      sh += '<div class="diagram-wrapper"><canvas id="distance-chart"></canvas></div></div>';
+      sh += '</div>';
+      sh += '<div class="card"><div class="card-header"><h3>Module Comparison</h3></div><div class="card-body" style="padding:0;overflow-x:auto;">';
+      sh += '<table class="comparison-table"><thead><tr><th>Module</th><th>Classes</th><th>A</th><th>I</th><th>D</th><th>Ca</th><th>Ce</th><th>LCOM4</th><th>Quality</th></tr></thead><tbody>';
+      data.forEach(function(d, i) {
+        sh += '<tr onclick="switchView(document.querySelectorAll(\'.nav-item\')[' + (i + 1) + '],\'' + d.name.replace(/'/g, "\\'") + '\')">';
+        sh += '<td>' + d.name + '</td><td>' + d.numberOfClasses + '</td><td>' + fmt(d.abstractness) + '</td><td>' + fmt(d.instability) + '</td><td>' + fmt(d.distance) + '</td><td>' + d.ca + '</td><td>' + d.ce + '</td><td>' + fmt(d.lcom4) + '</td><td>' + distBadge(d.distance) + '</td></tr>';
+      });
+      sh += '</tbody></table></div></div>';
+      document.getElementById('content-summary').innerHTML = sh;
+
+      // --- Module Detail Content ---
+      data.forEach(function(d, i) {
+        var h = '<div class="card"><div class="card-header"><h3>Key Metrics</h3>' + distBadge(d.distance) + '</div><div class="card-body"><div class="metrics-grid">';
+        h += tile('Classes', d.numberOfClasses) + tile('Abstractness', fmt(d.abstractness)) + tile('Instability', fmt(d.instability));
+        h += tile('Distance', fmt(d.distance)) + tile('Ca (Afferent)', d.ca) + tile('Ce (Efferent)', d.ce);
+        h += tile('Avg LCOM4', fmt(d.lcom4)) + tile('Avg Methods/Class', fmt(d.averageMethodsPerClass));
+        h += tile('Avg Public Methods', fmt(d.averagePublicMethodsPerClass));
+        h += tile('Getter/Setter Share', pct(d.shareGetterSetters)) + tile('Local Call Share', pct(d.shareLocalCallMethods));
+        h += '</div></div></div>';
+        h += '<div class="two-col">';
+        h += '<div class="card"><div class="card-header"><h3>Method Line Statistics</h3></div><div class="card-body" style="padding:0">';
+        h += '<table class="stats-table"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody>';
+        if (d.methodStatistics) {
+          var ms = d.methodStatistics;
+          h += sRow('Mean', fmt(ms.mean)) + sRow('Median', fmt(ms.median));
+          h += sRow('25th Percentile', fmt(ms.percentile25)) + sRow('75th Percentile', fmt(ms.percentile75));
+          h += sRow('80th Percentile', fmt(ms.percentile80)) + sRow('90th Percentile', fmt(ms.percentile90));
+          h += sRow('95th Percentile', fmt(ms.percentile95)) + sRow('99th Percentile', fmt(ms.percentile99));
+        }
+        h += '</tbody></table></div></div>';
+        h += '<div class="card"><div class="card-header"><h3>Abstractness / Instability</h3></div>';
+        h += '<div class="diagram-wrapper"><canvas id="diagram-mod-' + i + '"></canvas></div></div>';
+        h += '</div>';
+        document.getElementById('content-mod-' + i).innerHTML = h;
       });
 
+      // --- Draw all diagrams ---
+      drawDiagram('summary-diagram', data);
+      drawDistanceChart('distance-chart');
+      data.forEach(function(d, i) { drawDiagram('diagram-mod-' + i, [d]); });
     </script>
   </body>
 </html>

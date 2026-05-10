@@ -11,16 +11,20 @@ public class ModuleProcessingState {
     private final Set<String> processedModules = new HashSet<>();
 
     public boolean allModulesProcessed() {
-        var todo = new HashSet<>(detectedModules);
-        todo.removeAll(processedModules);
-        return todo.isEmpty();
+        if (detectedModules.isEmpty()) {
+            return false;
+        }
+        return processedModules.containsAll(detectedModules);
     }
 
-    public void addDetectedModule(String detectedModule) {
-        this.detectedModules.add(detectedModule);
+    public void setDetectedModules(Set<String> modules) {
+        if (detectedModules.isEmpty()) {
+            detectedModules.addAll(modules);
+        }
     }
 
     public void addProcessedModule(String processedModule) {
+
         this.processedModules.add(processedModule);
     }
 

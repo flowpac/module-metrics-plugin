@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 import static java.util.function.Predicate.not;
 
-public record ClassDescriptor(String className, boolean isAbstract, Visibility visibility, Set<String> dependencies, Set<MethodDescriptor> methods) {
+public record ClassDescriptor(String className, boolean isAbstract, Visibility visibility, Set<String> dependencies, Set<MethodDescriptor> methods, Set<String> superTypes) {
 
     public boolean hasDependency(Set<String> check) {
         return dependencies.stream().anyMatch(check::contains);

@@ -57,6 +57,6 @@ class ModulesTest {
     }
 
     private ClassDescriptor createClassDescriptor(String name, Set<String> dependencies){
-        return new ClassDescriptor(name, false, Visibility.PUBLIC, dependencies, new HashSet<>());
+        return new ClassDescriptor(name, false, Visibility.PUBLIC, dependencies, new HashSet<>(), Set.of());
     }
 }

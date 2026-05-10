@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Call Flow Explorer</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAMFBMVEU0OkArMjhobHEoPUPFEBIuO0L+AAC2FBZ2JyuNICOfGx7xAwTjCAlCNTvVDA1aLzQ3COjMAAAAVUlEQVQI12NgwAaCDSA0888GCItjn0szWGBJTVoGSCjWs8TleQCQYV95evdxkFT8Kpe0PLDi5WfKd4LUsN5zS1sKFolt8bwAZrCaGqNYJAgFDEpQAAAzmxafI4vZWwAAAABJRU5ErkJggg==" />
+    <style>
+      :root {
+        --bg: #f5f7fa; --surface: #ffffff; --surface-alt: #f0f2f5;
+        --text: #1a1a2e; --text-secondary: #64748b;
+        --accent: #4f46e5; --accent-light: #e0e7ff;
+        --border: #e2e8f0;
+        --green: #16a34a; --green-bg: #dcfce7;
+        --yellow: #ca8a04; --yellow-bg: #fef9c3;
+        --red: #dc2626; --red-bg: #fee2e2;
+        --cyan: #0891b2; --cyan-bg: #cffafe;
+        --purple: #7c3aed; --purple-bg: #ede9fe;
+        --radius: 12px;
+        --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+        --sidebar-w: 300px;
+      }
+      * { margin:0; padding:0; box-sizing:border-box; }
+      body { font-family: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+
+      .layout { display:flex; min-height:100vh; }
+
+      /* Sidebar */
+      .sidebar { width:var(--sidebar-w); background:var(--surface); border-right:1px solid var(--border); position:fixed; top:0; left:0; bottom:0; overflow-y:auto; z-index:10; }
+      .sidebar-header { padding:1rem; border-bottom:1px solid var(--border); }
+      .sidebar-header h1 { font-size:0.95rem; font-weight:700; color:var(--accent); }
+      .sidebar-header p { font-size:0.7rem; color:var(--text-secondary); margin-top:0.1rem; }
+      .sidebar-links { padding:0.5rem; border-bottom:1px solid var(--border); display:flex; gap:0.25rem; flex-wrap:wrap; }
+      .sidebar-links a { font-size:0.75rem; color:var(--accent); text-decoration:none; padding:0.25rem 0.5rem; border-radius:6px; border:1px solid var(--border); }
+      .sidebar-links a:hover { background:var(--accent-light); }
+      .sidebar-search { padding:0.5rem; border-bottom:1px solid var(--border); }
+      .sidebar-search input { width:100%; padding:0.4rem 0.6rem; border:1px solid var(--border); border-radius:6px; font-size:0.8rem; outline:none; }
+      .sidebar-search input:focus { border-color:var(--accent); }
+
+      .nav-section { padding:0.5rem 0.75rem 0.2rem; font-size:0.6rem; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-secondary); cursor:pointer; user-select:none; }
+      .nav-section:hover { color:var(--accent); }
+      .nav-section::before { content:'▶ '; font-size:0.55rem; }
+      .nav-section.open::before { content:'▼ '; }
+      .nav-group { display:none; }
+      .nav-group.open { display:block; }
+      .nav-class { padding:0.2rem 0.5rem 0.2rem 1.2rem; font-size:0.78rem; font-weight:500; color:var(--text); cursor:pointer; user-select:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .nav-class:hover { color:var(--accent); }
+      .nav-class::before { content:'▶ '; font-size:0.5rem; color:var(--text-secondary); }
+      .nav-class.open::before { content:'▼ '; }
+      .nav-class.abstract { font-style:italic; }
+      .nav-methods { display:none; }
+      .nav-methods.open { display:block; }
+      .nav-method { display:block; width:calc(100% - 1rem); text-align:left; padding:0.25rem 0.5rem 0.25rem 2rem; border:none; background:none; font-size:0.73rem; color:var(--text-secondary); cursor:pointer; border-radius:4px; margin:0 0.5rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-family:monospace; }
+      .nav-method:hover { background:var(--surface-alt); color:var(--accent); }
+      .nav-method.active { background:var(--accent-light); color:var(--accent); font-weight:600; }
+      .nav-method .vis { font-size:0.6rem; font-weight:600; border-radius:3px; padding:0 3px; margin-right:2px; }
+      .vis-PUBLIC { background:var(--green-bg); color:var(--green); }
+      .vis-PRIVATE { background:var(--red-bg); color:var(--red); }
+      .vis-PROTECTED { background:var(--yellow-bg); color:var(--yellow); }
+      .vis-DEFAULT { background:var(--surface-alt); color:var(--text-secondary); }
+
+      /* Main */
+      .main { margin-left:var(--sidebar-w); flex:1; min-width:0; }
+      .main-header { background:var(--accent); color:white; padding:1.25rem 2rem; display:flex; align-items:center; justify-content:space-between; }
+      .main-header h2 { font-size:1.15rem; font-weight:700; }
+      .container { padding:1.5rem; overflow-x:auto; }
+
+      /* Flow tree */
+      .flow-placeholder { text-align:center; padding:4rem 2rem; color:var(--text-secondary); font-size:0.9rem; }
+      .flow-placeholder .icon { font-size:2.5rem; margin-bottom:0.5rem; }
+
+      .flow-tree { position:relative; padding:1rem 0; }
+      .flow-node { position:relative; margin-left:28px; }
+      .flow-node::before { content:''; position:absolute; left:-18px; top:0; bottom:0; width:2px; background:var(--border); }
+      .flow-node:last-child::before { height:20px; }
+      .flow-node::after { content:''; position:absolute; left:-18px; top:20px; width:16px; height:2px; background:var(--border); }
+
+      .flow-card { display:inline-flex; align-items:center; gap:0.4rem; padding:0.35rem 0.7rem; margin:0.25rem 0; border-radius:8px; border:1.5px solid var(--border); background:var(--surface); font-size:0.78rem; box-shadow:0 1px 2px rgba(0,0,0,0.04); cursor:default; max-width:700px; transition:border-color 0.15s; }
+      .flow-card:hover { border-color:var(--accent); }
+      .flow-card.root { border-color:var(--accent); background:var(--accent); color:white; font-weight:600; }
+      .flow-card.root .mod-badge { background:rgba(255,255,255,0.2); color:white; }
+      .flow-card.root .cls-name { color:rgba(255,255,255,0.85); }
+      .flow-card.cycle { border-color:var(--red); border-style:dashed; opacity:0.7; }
+      .flow-card.interface-node { border-color:var(--purple); background:var(--purple-bg); }
+      .flow-card.clickable { cursor:pointer; }
+      .flow-card.clickable:hover { box-shadow:0 2px 8px rgba(79,70,229,0.15); }
+
+      .mod-badge { font-size:0.6rem; font-weight:600; padding:0.1rem 0.4rem; border-radius:999px; white-space:nowrap; }
+      .cls-name { font-size:0.7rem; color:var(--text-secondary); margin-right:0.2rem; }
+      .method-name { font-family:monospace; font-size:0.75rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .cycle-label { font-size:0.6rem; color:var(--red); font-weight:600; margin-left:0.3rem; }
+      .interface-label { font-size:0.6rem; color:var(--purple); font-weight:600; margin-left:0.3rem; }
+
+      .impl-group { margin-left:28px; border-left:2px dashed var(--purple); padding-left:16px; margin-top:0.15rem; margin-bottom:0.3rem; }
+      .impl-header { font-size:0.65rem; color:var(--purple); font-weight:600; text-transform:uppercase; letter-spacing:0.05em; padding:0.2rem 0; }
+
+      .flow-stats { display:flex; gap:1rem; margin-bottom:1rem; flex-wrap:wrap; }
+      .flow-stat { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:0.5rem 0.75rem; font-size:0.78rem; }
+      .flow-stat .label { font-size:0.65rem; color:var(--text-secondary); text-transform:uppercase; font-weight:600; }
+      .flow-stat .value { font-size:1.1rem; font-weight:700; color:var(--accent); }
+
+      .depth-limit-note { font-size:0.75rem; color:var(--yellow); background:var(--yellow-bg); padding:0.3rem 0.6rem; border-radius:6px; display:inline-block; margin-top:0.2rem; }
+
+      @media (max-width:900px) { .sidebar { display:none; } .main { margin-left:0; } }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <nav class="sidebar" id="sidebar"></nav>
+      <div class="main">
+        <div class="main-header">
+          <h2 id="page-title">Call Flow Explorer</h2>
+        </div>
+        <div class="container" id="content">
+          <div class="flow-placeholder">
+            <div class="icon">🔀</div>
+            <p>Wähle links ein Modul, dann eine Klasse und eine Methode,<br>um den Call Flow zu visualisieren.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      var data = ##data##;
+      var MAX_DEPTH = 20;
+
+      var MODULE_COLORS = [
+        {bg:'#e0e7ff',fg:'#4f46e5'},{bg:'#cffafe',fg:'#0891b2'},
+        {bg:'#dcfce7',fg:'#16a34a'},{bg:'#fef9c3',fg:'#ca8a04'},
+        {bg:'#fee2e2',fg:'#dc2626'},{bg:'#ede9fe',fg:'#7c3aed'},
+        {bg:'#fce7f3',fg:'#db2777'},{bg:'#dbeafe',fg:'#2563eb'},
+        {bg:'#ecfccb',fg:'#65a30d'},{bg:'#ffedd5',fg:'#ea580c'}
+      ];
+      var moduleColorMap = {};
+      (data.modules || []).forEach(function(m,i){ moduleColorMap[m.name] = MODULE_COLORS[i % MODULE_COLORS.length]; });
+
+      function modBadge(modName) {
+        var c = moduleColorMap[modName] || {bg:'#f0f2f5',fg:'#64748b'};
+        return '<span class="mod-badge" style="background:'+c.bg+';color:'+c.fg+';">'+esc(modName)+'</span>';
+      }
+      function esc(s) { var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+      function shortMethod(s) {
+        // shorten param types: keep only simple names
+        return s.replace(/[a-z_][a-z0-9_]*\./gi, '');
+      }
+
+      // --- Build sidebar ---
+      var sb = document.getElementById('sidebar');
+      var html = '<div class="sidebar-header"><h1>🔀 Call Flow</h1><p>Method Call Flow Explorer</p></div>';
+      html += '<div class="sidebar-links"><a href="oo-metrics-report.html">📊 Metrics</a><a href="module-dependencies.html">📈 Dependencies</a></div>';
+      html += '<div class="sidebar-search"><input type="text" id="search-input" placeholder="Search methods..."></div>';
+
+      (data.modules || []).forEach(function(mod, mi) {
+        html += '<div class="nav-section" data-group="g'+mi+'" onclick="toggleGroup(this)">'+esc(mod.name)+' ('+mod.classes.length+')</div>';
+        html += '<div class="nav-group" id="g'+mi+'">';
+        mod.classes.forEach(function(cls, ci) {
+          var cid = 'c'+mi+'_'+ci;
+          html += '<div class="nav-class'+(cls.isAbstract?' abstract':'')+'" data-methods="'+cid+'" onclick="toggleClass(this)" title="'+esc(cls.className)+'">'+esc(cls.simpleName)+'</div>';
+          html += '<div class="nav-methods" id="'+cid+'">';
+          cls.methods.forEach(function(m) {
+            html += '<button class="nav-method" data-fqn="'+esc(m.fqn)+'" onclick="selectMethod(this)" title="'+esc(m.fqn)+'">';
+            html += '<span class="vis vis-'+m.visibility+'">'+m.visibility.charAt(0)+'</span> ';
+            html += esc(shortMethod(m.shortName));
+            html += '</button>';
+          });
+          html += '</div>';
+        });
+        html += '</div>';
+      });
+      sb.innerHTML = html;
+
+      // --- Sidebar interactions ---
+      function toggleGroup(el) {
+        el.classList.toggle('open');
+        var g = document.getElementById(el.dataset.group);
+        if(g) g.classList.toggle('open');
+      }
+      function toggleClass(el) {
+        el.classList.toggle('open');
+        var m = document.getElementById(el.dataset.methods);
+        if(m) m.classList.toggle('open');
+      }
+
+      // --- Search ---
+      document.getElementById('search-input').addEventListener('input', function(e) {
+        var q = e.target.value.toLowerCase();
+        document.querySelectorAll('.nav-method').forEach(function(btn) {
+          var match = !q || btn.dataset.fqn.toLowerCase().indexOf(q) >= 0;
+          btn.style.display = match ? '' : 'none';
+        });
+        if(q) {
+          document.querySelectorAll('.nav-section').forEach(function(s){ s.classList.add('open'); });
+          document.querySelectorAll('.nav-group').forEach(function(g){ g.classList.add('open'); });
+          document.querySelectorAll('.nav-class').forEach(function(c){ c.classList.add('open'); });
+          document.querySelectorAll('.nav-methods').forEach(function(m){ m.classList.add('open'); });
+        }
+      });
+
+      // --- Select method & render flow ---
+      var activeBtn = null;
+      function selectMethod(btn) {
+        if(activeBtn) activeBtn.classList.remove('active');
+        btn.classList.add('active');
+        activeBtn = btn;
+        var fqn = btn.dataset.fqn;
+        renderFlow(fqn);
+      }
+
+      // Allow clicking flow nodes to navigate
+      function selectMethodByFqn(fqn) {
+        var btn = document.querySelector('.nav-method[data-fqn="'+CSS.escape(fqn)+'"]');
+        if(btn) {
+          // Open parent groups
+          var p = btn.parentElement;
+          while(p && p !== sb) {
+            if(p.classList.contains('nav-group') || p.classList.contains('nav-methods')) p.classList.add('open');
+            if(p.previousElementSibling && (p.previousElementSibling.classList.contains('nav-section') || p.previousElementSibling.classList.contains('nav-class'))) {
+              p.previousElementSibling.classList.add('open');
+            }
+            p = p.parentElement;
+          }
+          selectMethod(btn);
+          btn.scrollIntoView({block:'center',behavior:'smooth'});
+        }
+      }
+
+      function renderFlow(fqn) {
+        var parts = fqn.split('#');
+        var className = parts[0] || '';
+        var methodShort = parts[1] || '';
+        document.getElementById('page-title').textContent = shortMethod(methodShort) + ' — ' + simpleName(className);
+
+        var visited = {};
+        var stats = { nodes:0, depth:0, modules:{}, classes:{}, cycles:0 };
+        var treeHtml = buildFlowTree(fqn, 0, visited, stats, true);
+
+        var statsHtml = '<div class="flow-stats">';
+        statsHtml += '<div class="flow-stat"><div class="label">Calls</div><div class="value">'+stats.nodes+'</div></div>';
+        statsHtml += '<div class="flow-stat"><div class="label">Max Depth</div><div class="value">'+stats.depth+'</div></div>';
+        statsHtml += '<div class="flow-stat"><div class="label">Modules</div><div class="value">'+Object.keys(stats.modules).length+'</div></div>';
+        statsHtml += '<div class="flow-stat"><div class="label">Classes</div><div class="value">'+Object.keys(stats.classes).length+'</div></div>';
+        if(stats.cycles > 0) statsHtml += '<div class="flow-stat"><div class="label">Cycles</div><div class="value" style="color:var(--red)">'+stats.cycles+'</div></div>';
+        statsHtml += '</div>';
+
+        document.getElementById('content').innerHTML = statsHtml + '<div class="flow-tree">' + treeHtml + '</div>';
+      }
+
+      function buildFlowTree(fqn, depth, visited, stats, isRoot) {
+        var parts = fqn.split('#');
+        var className = parts[0] || '';
+        var methodShort = parts[1] || '';
+        var modName = findModule(className);
+
+        if(modName) { stats.modules[modName] = true; stats.classes[className] = true; }
+        if(depth > stats.depth) stats.depth = depth;
+
+        // Cycle detection
+        if(visited[fqn]) {
+          stats.cycles++;
+          return '<div class="flow-card cycle">'
+            + modBadge(modName||'?')
+            + '<span class="cls-name">'+esc(simpleName(className))+'.</span>'
+            + '<span class="method-name">'+esc(shortMethod(methodShort))+'</span>'
+            + '<span class="cycle-label">⟲ CYCLE</span>'
+            + '</div>';
+        }
+
+        // Depth limit
+        if(depth > MAX_DEPTH) {
+          return '<div class="depth-limit-note">⋯ max depth ('+MAX_DEPTH+') reached</div>';
+        }
+
+        visited[fqn] = true;
+
+        var targets = data.callGraph[fqn] || [];
+        var cardClass = isRoot ? 'flow-card root' : 'flow-card';
+        if(!isRoot && targets.length > 0) cardClass += ' clickable';
+
+        var h = '<div class="'+cardClass+'"'
+          + (!isRoot && data.callGraph[fqn] ? ' onclick="selectMethodByFqn(\''+escAttr(fqn)+'\')" title="Click to explore from here"' : '')
+          + '>'
+          + modBadge(modName||'?')
+          + '<span class="cls-name">'+esc(simpleName(className))+'.</span>'
+          + '<span class="method-name">'+esc(shortMethod(methodShort))+'</span>'
+          + '</div>';
+
+        if(targets.length > 0) {
+          for(var i=0; i<targets.length; i++) {
+            var t = targets[i];
+            stats.nodes++;
+
+            if(t.interfaceCall && t.implementations && t.implementations.length > 1) {
+              // Multiple implementations: show branching
+              h += '<div class="flow-node">';
+              h += '<div class="flow-card interface-node">'
+                + modBadge(t.targetModule)
+                + '<span class="cls-name">'+esc(t.targetSimpleName)+'.</span>'
+                + '<span class="method-name">'+esc(shortMethod(t.targetMethod))+'</span>'
+                + '<span class="interface-label">◇ INTERFACE</span>'
+                + '</div>';
+              h += '<div class="impl-group">';
+              h += '<div class="impl-header">'+t.implementations.length+' Implementations</div>';
+              for(var j=0; j<t.implementations.length; j++) {
+                var impl = t.implementations[j];
+                h += '<div class="flow-node">';
+                h += buildFlowTree(impl.fqn, depth+1, Object.assign({},visited), stats, false);
+                h += '</div>';
+              }
+              h += '</div></div>';
+            } else {
+              // Single target (possibly resolved from interface)
+              h += '<div class="flow-node">';
+              h += buildFlowTree(t.targetFqn, depth+1, visited, stats, false);
+              h += '</div>';
+            }
+          }
+        }
+
+        return h;
+      }
+
+      function findModule(className) {
+        for(var i=0; i<(data.modules||[]).length; i++) {
+          for(var j=0; j<data.modules[i].classes.length; j++) {
+            if(data.modules[i].classes[j].className === className) return data.modules[i].name;
+          }
+        }
+        return null;
+      }
+
+      function simpleName(fqn) {
+        var d = fqn.lastIndexOf('.');
+        return d >= 0 ? fqn.substring(d+1) : fqn;
+      }
+
+      function escAttr(s) {
+        return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      }
+    </script>
+  </body>
+</html>
+

@@ -1,6 +1,7 @@
 package ch.javacamp.metrics;
 
 import ch.javacamp.metrics.analyzer.ClassAnalyzer;
+import ch.javacamp.metrics.core.CallFlowBuilder;
 import ch.javacamp.metrics.core.ModuleDescriptor;
 import ch.javacamp.metrics.core.Modules;
 import ch.javacamp.metrics.rendering.Renderer;
@@ -73,6 +74,8 @@ public class MetricsMojo extends AbstractMojo {
             var metrics = modules.computeMetrics();
             renderer.render(targetDir.toPath().resolve("oo-metrics-report.html"), metrics);
             renderer.renderDependencyGraph(targetDir.toPath().resolve("module-dependencies.html"), metrics);
+            var callFlowData = new CallFlowBuilder().build(modules.getModules());
+            renderer.renderCallFlow(targetDir.toPath().resolve("call-flow.html"), callFlowData);
         }
     }
 }

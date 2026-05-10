@@ -30,7 +30,8 @@ public class DependencyAnalyzer {
         Set<String> dependentClasses = new HashSet<>();
 
         // Extract super classes and interfaces
-        dependentClasses.addAll(extractSuperclassAndInterfaces(classNode));
+        Set<String> superTypes = extractSuperclassAndInterfaces(classNode);
+        dependentClasses.addAll(superTypes);
         // Extract field types
         dependentClasses.addAll(extractFields(classNode));
         // Extract class-level annotations
@@ -72,7 +73,7 @@ public class DependencyAnalyzer {
         dependentClasses.remove(ownName);
         var visibility = Visibility.parse(classNode.access);
 
-        return new ClassDescriptor(ownName, isAbstract(classNode), visibility, dependentClasses, new HashSet<>());
+        return new ClassDescriptor(ownName, isAbstract(classNode), visibility, dependentClasses, new HashSet<>(), superTypes);
     }
 
     private Set<String> extractExceptionTypes(MethodNode method) {

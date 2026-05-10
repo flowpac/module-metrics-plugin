@@ -9,3 +9,8 @@ The plugin produces a file in ``target/oo-metrics-report.html``.
 ## Metrics
 
 ## Info
+
+## GPG Signing
+```
+export GPG_TTY=$(tty)
+```

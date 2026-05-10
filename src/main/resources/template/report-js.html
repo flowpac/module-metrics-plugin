@@ -635,6 +635,12 @@
           });
           h += '</tbody></table></div></div>';
         }
+        // SOLID Indicators
+        h += '<div class="card"><div class="card-header"><h3>SOLID Indicators</h3></div><div class="card-body"><div class="metrics-grid">';
+        h += tile('DIP Ratio', pct(d.dependencyInversionRatio), 'Dependency Inversion Principle: share of dependencies pointing to abstract types (interfaces/abstract classes) vs. concrete classes. Higher is better — indicates programming against abstractions. &gt;50% is good.');
+        h += tile('Avg Methods/Interface', fmt(d.averageMethodsPerInterface), 'Interface Segregation Principle: average number of methods per interface/abstract class. Lower is better — fat interfaces (&gt;8 methods) force clients to depend on methods they don\'t use.');
+        h += tile('Max Methods/Interface', d.maxMethodsOnInterface, 'Largest interface in this module by method count. Interfaces with &gt;8 methods are candidates for splitting into smaller, role-specific interfaces.');
+        h += '</div></div></div>';
         h += '<div class="card"><div class="card-header"><h3>Module Dependencies</h3></div>';
         h += '<div class="diagram-wrapper"><canvas id="depgraph-mod-' + i + '"></canvas></div></div>';
         h += '<div class="two-col">';

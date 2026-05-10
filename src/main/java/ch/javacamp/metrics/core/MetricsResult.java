@@ -35,6 +35,9 @@ public class MetricsResult {
     private final int maxCyclomaticComplexity;
     private final List<List<String>> circularDependencies;
     private final List<StabilityViolation> sdpViolations;
+    private final double dependencyInversionRatio;
+    private final double averageMethodsPerInterface;
+    private final int maxMethodsOnInterface;
 
     @Builder
     @Getter

@@ -174,6 +174,14 @@ public class Modules {
     }
 
     public List<MetricsResult> computeMetrics() {
+        // Build class abstractness index across all modules (for DIP)
+        Map<String, Boolean> classAbstractnessIndex = new HashMap<>();
+        for (var mod : modules) {
+            for (var cls : mod.classes()) {
+                classAbstractnessIndex.put(cls.className(), cls.isAbstract());
+            }
+        }
+
         // First pass: compute instability for all modules
         Map<String, Double> instabilities = new HashMap<>();
         for (var mod : modules) {
@@ -182,7 +190,7 @@ public class Modules {
             instabilities.put(mod.name(), (ca + ce) == 0 ? 0d : (double) ce / (double) (ce + ca));
         }
 
-        // Second pass: compute full metrics with SDP violations
+        // Second pass: compute full metrics with SDP violations and SOLID metrics
         List<MetricsResult> result = new ArrayList<>();
         for (ModuleDescriptor currentModule : getModules()) {
             var metrics = computeMetrics(currentModule);
@@ -209,6 +217,9 @@ public class Modules {
                     .maxCyclomaticComplexity(metrics.maxCyclomaticComplexity())
                     .circularDependencies(metrics.circularDependencies())
                     .sdpViolations(sdpViolations)
+                    .dependencyInversionRatio(currentModule.dependencyInversionRatio(classAbstractnessIndex))
+                    .averageMethodsPerInterface(currentModule.averageMethodsPerInterface())
+                    .maxMethodsOnInterface(currentModule.maxMethodsOnInterface())
                     .build());
         }
         return result;

@@ -1,5 +1,6 @@
 package ch.javacamp.metrics.core;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -89,6 +90,45 @@ public record ModuleDescriptor(String name, Set<ClassDescriptor> classes) {
                 .max().orElse(0);
     }
 
+    /**
+     * DIP: ratio of dependencies pointing to abstract types vs. all resolved dependencies.
+     * Only counts dependencies that can be resolved within the known modules.
+     */
+    public double dependencyInversionRatio(Map<String, Boolean> classAbstractnessIndex) {
+        long abstractDeps = 0, totalDeps = 0;
+        for (var cls : classes) {
+            for (var dep : cls.dependencies()) {
+                if (classAbstractnessIndex.containsKey(dep)) {
+                    totalDeps++;
+                    if (classAbstractnessIndex.get(dep)) {
+                        abstractDeps++;
+                    }
+                }
+            }
+        }
+        return totalDeps == 0 ? 0d : (double) abstractDeps / (double) totalDeps;
+    }
 
+    /**
+     * ISP: average number of methods declared on interfaces in this module.
+     */
+    public double averageMethodsPerInterface() {
+        var interfaces = classes.stream()
+                .filter(ClassDescriptor::isAbstract)
+                .filter(c -> c.countMethodsInClass() > 0)
+                .toList();
+        if (interfaces.isEmpty()) return 0d;
+        var totalMethods = interfaces.stream().mapToInt(ClassDescriptor::countMethodsInClass).sum();
+        return (double) totalMethods / interfaces.size();
+    }
 
+    /**
+     * ISP: max methods on any single interface in this module.
+     */
+    public int maxMethodsOnInterface() {
+        return classes.stream()
+                .filter(ClassDescriptor::isAbstract)
+                .mapToInt(ClassDescriptor::countMethodsInClass)
+                .max().orElse(0);
+    }
 }

@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
+import java.util.List;
+
 @Builder()
 @Getter
 @Accessors(fluent = true)
@@ -26,6 +28,8 @@ public class MetricsResult {
     private final double shareGetterSetters;
     private final double shareLocalCallMethods;
     private final MethodStatistics methodStatistics;
+    private final List<ModuleCoupling> afferentModules;
+    private final List<ModuleCoupling> efferentModules;
 
     @Builder
     @Getter
@@ -33,7 +37,14 @@ public class MetricsResult {
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     public static class MethodStatistics{
         double mean, median, percentile25, percentile75, percentile80, percentile90, percentile95, percentile99;
-
     }
 
+    @Builder
+    @Getter
+    @Accessors(fluent = true)
+    @AllArgsConstructor
+    public static class ModuleCoupling {
+        private final String moduleName;
+        private final long classCount;
+    }
 }

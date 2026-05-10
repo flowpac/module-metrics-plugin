@@ -82,6 +82,8 @@ public class Modules {
                 .shareGetterSetters(shareOfGetterSetters)
                 .shareLocalCallMethods(shareOfMethodsWithLocalCalls)
                 .methodStatistics(methodStatistics)
+                .afferentModules(computeAfferentModules(module))
+                .efferentModules(computeEfferentModules(module))
                 .build();
     }
 
@@ -96,6 +98,34 @@ public class Modules {
                 .percentile90(lineCountResult.percentile(90))
                 .percentile95(lineCountResult.percentile(95))
                 .percentile99(lineCountResult.percentile(99)).build();
+    }
+
+    private List<MetricsResult.ModuleCoupling> computeAfferentModules(ModuleDescriptor module) {
+        var classNamesCurrentModule = module.allClassNames();
+        List<MetricsResult.ModuleCoupling> result = new ArrayList<>();
+        for (var other : otherModules(module)) {
+            long count = other.classes().stream()
+                    .filter(c -> c.hasDependency(classNamesCurrentModule))
+                    .count();
+            if (count > 0) {
+                result.add(new MetricsResult.ModuleCoupling(other.name(), count));
+            }
+        }
+        return result;
+    }
+
+    private List<MetricsResult.ModuleCoupling> computeEfferentModules(ModuleDescriptor module) {
+        List<MetricsResult.ModuleCoupling> result = new ArrayList<>();
+        for (var other : otherModules(module)) {
+            var otherClassNames = other.allClassNames();
+            long count = module.classes().stream()
+                    .filter(c -> c.hasDependency(otherClassNames))
+                    .count();
+            if (count > 0) {
+                result.add(new MetricsResult.ModuleCoupling(other.name(), count));
+            }
+        }
+        return result;
     }
 
     public List<MetricsResult> computeMetrics() {

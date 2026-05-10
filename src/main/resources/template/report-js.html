@@ -214,6 +214,7 @@
       ];
 
       var data = ##data##;
+      data.sort(function(a, b) { return a.name.localeCompare(b.name); });
 
       function fmt(v, d) { return (v == null || isNaN(v)) ? '–' : Number(v).toFixed(d == null ? 2 : d); }
       function pct(v) { return (v == null || isNaN(v)) ? '–' : (v * 100).toFixed(1) + '%'; }
@@ -401,6 +402,130 @@
       function tile(l, v) { return '<div class="metric-tile"><span class="label">' + l + '</span><span class="value">' + v + '</span></div>'; }
       function sRow(l, v) { return '<tr><td>' + l + '</td><td style="font-weight:600">' + v + '</td></tr>'; }
 
+      // --- Dependency Graph ---
+      function fitText(ctx, text, maxWidth, maxFontSize, fontWeight) {
+        var size = maxFontSize;
+        var prefix = fontWeight ? fontWeight + ' ' : '';
+        while (size >= 7) {
+          ctx.font = prefix + size + 'px system-ui';
+          if (ctx.measureText(text).width <= maxWidth) return size;
+          size--;
+        }
+        return 7;
+      }
+
+      function drawDependencyGraph(canvasId, moduleData) {
+        var canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        var aff = moduleData.afferentModules || [];
+        var eff = moduleData.efferentModules || [];
+        if (aff.length === 0 && eff.length === 0) {
+          canvas.parentElement.innerHTML = '<div style="padding:2rem;text-align:center;color:#94a3b8;font-size:0.85rem;">No module dependencies</div>';
+          return;
+        }
+
+        var dpr = window.devicePixelRatio || 1;
+
+        var maxSide = Math.max(aff.length, eff.length, 1);
+        var rowH = 36;
+        var nodeW = 160, nodeH = 32, nodeR = 6;
+        var arrowGap = 70;
+        var margin = 16;
+        var w = margin + nodeW + arrowGap + nodeW + arrowGap + nodeW + margin;
+        var h = Math.max(maxSide * rowH + 80, 200);
+
+        canvas.width = w * dpr; canvas.height = h * dpr;
+        canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+        var ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+
+        ctx.fillStyle = '#fafbfc'; ctx.fillRect(0, 0, w, h);
+
+        var centerX = w / 2, centerY = h / 2;
+        var colLeftX = margin;
+        var colRightX = w - margin - nodeW;
+        var textMaxW = nodeW - 16;
+
+        // Central module node
+        var cX = centerX - nodeW / 2, cY = centerY - nodeH / 2;
+        ctx.fillStyle = '#4f46e5';
+        ctx.beginPath(); ctx.roundRect(cX, cY, nodeW, nodeH, nodeR); ctx.fill();
+        var cFontSize = fitText(ctx, moduleData.name, textMaxW, 12, 'bold');
+        ctx.font = 'bold ' + cFontSize + 'px system-ui';
+        ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
+        ctx.fillText(moduleData.name, centerX, centerY + 4);
+
+        // Draw afferent modules (left side — depend on me)
+        var affStartY = centerY - (aff.length * rowH) / 2;
+        aff.forEach(function(m, idx) {
+          var ny = affStartY + idx * rowH + (rowH - nodeH) / 2;
+          var nx = colLeftX;
+
+          ctx.fillStyle = '#e0e7ff'; ctx.strokeStyle = '#4f46e5'; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.roundRect(nx, ny, nodeW, nodeH, nodeR); ctx.fill(); ctx.stroke();
+          var fs = fitText(ctx, m.moduleName, textMaxW, 11, '');
+          ctx.font = fs + 'px system-ui';
+          ctx.fillStyle = '#1a1a2e'; ctx.textAlign = 'center';
+          ctx.fillText(m.moduleName, nx + nodeW / 2, ny + nodeH / 2 + 4);
+
+          var ax1 = nx + nodeW, ay = ny + nodeH / 2;
+          var ax2 = cX, ay2 = centerY;
+          drawArrow(ctx, ax1, ay, ax2, ay2, '#4f46e5');
+
+          var midX = (ax1 + ax2) / 2, midY = (ay + ay2) / 2;
+          ctx.fillStyle = '#fff'; ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(midX, midY, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#4f46e5'; ctx.font = 'bold 9px system-ui';
+          ctx.fillText(m.classCount, midX, midY + 3);
+        });
+
+        // Draw efferent modules (right side — I depend on)
+        var effStartY = centerY - (eff.length * rowH) / 2;
+        eff.forEach(function(m, idx) {
+          var ny = effStartY + idx * rowH + (rowH - nodeH) / 2;
+          var nx = colRightX;
+
+          ctx.fillStyle = '#fef9c3'; ctx.strokeStyle = '#ca8a04'; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.roundRect(nx, ny, nodeW, nodeH, nodeR); ctx.fill(); ctx.stroke();
+          var fs = fitText(ctx, m.moduleName, textMaxW, 11, '');
+          ctx.font = fs + 'px system-ui';
+          ctx.fillStyle = '#1a1a2e'; ctx.textAlign = 'center';
+          ctx.fillText(m.moduleName, nx + nodeW / 2, ny + nodeH / 2 + 4);
+
+          var ax1 = cX + nodeW, ay1 = centerY;
+          var ax2 = nx, ay2 = ny + nodeH / 2;
+          drawArrow(ctx, ax1, ay1, ax2, ay2, '#ca8a04');
+
+          var midX = (ax1 + ax2) / 2, midY = (ay1 + ay2) / 2;
+          ctx.fillStyle = '#fff'; ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(midX, midY, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#ca8a04'; ctx.font = 'bold 9px system-ui';
+          ctx.fillText(m.classCount, midX, midY + 3);
+        });
+
+        // Legend
+        ctx.font = '10px system-ui'; ctx.textAlign = 'left';
+        ctx.fillStyle = '#4f46e5';
+        ctx.fillRect(12, h - 22, 10, 10);
+        ctx.fillText('Afferent (depends on me)', 26, h - 13);
+        ctx.fillStyle = '#ca8a04';
+        ctx.fillRect(190, h - 22, 10, 10);
+        ctx.fillText('Efferent (I depend on)', 204, h - 13);
+      }
+
+      function drawArrow(ctx, x1, y1, x2, y2, color) {
+        var headLen = 8;
+        var angle = Math.atan2(y2 - y1, x2 - x1);
+        ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - headLen * Math.cos(angle - 0.4), y2 - headLen * Math.sin(angle - 0.4));
+        ctx.lineTo(x2 - headLen * Math.cos(angle + 0.4), y2 - headLen * Math.sin(angle + 0.4));
+        ctx.closePath(); ctx.fill();
+      }
+
       // --- Build Sidebar ---
       var sidebarEl = document.getElementById('sidebar');
       var contentsEl = document.getElementById('tab-contents');
@@ -463,6 +588,8 @@
         h += tile('Avg Public Methods', fmt(d.averagePublicMethodsPerClass));
         h += tile('Getter/Setter Share', pct(d.shareGetterSetters)) + tile('Local Call Share', pct(d.shareLocalCallMethods));
         h += '</div></div></div>';
+        h += '<div class="card"><div class="card-header"><h3>Module Dependencies</h3></div>';
+        h += '<div class="diagram-wrapper"><canvas id="depgraph-mod-' + i + '"></canvas></div></div>';
         h += '<div class="two-col">';
         h += '<div class="card"><div class="card-header"><h3>Method Line Statistics</h3></div><div class="card-body" style="padding:0">';
         h += '<table class="stats-table"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody>';
@@ -483,7 +610,10 @@
       // --- Draw all diagrams ---
       drawDiagram('summary-diagram', data);
       drawDistanceChart('distance-chart');
-      data.forEach(function(d, i) { drawDiagram('diagram-mod-' + i, [d]); });
+      data.forEach(function(d, i) {
+        drawDiagram('diagram-mod-' + i, [d]);
+        drawDependencyGraph('depgraph-mod-' + i, d);
+      });
     </script>
   </body>
 </html>

@@ -14,7 +14,7 @@ import org.fusesource.jansi.Ansi;
 import javax.inject.Inject;
 import java.io.File;
 import java.nio.file.Path;
-import java.util.stream.Collectors;
+import java.util.List;
 
 
 @Mojo(name = "analyze", defaultPhase = LifecyclePhase.PRE_SITE)
@@ -23,36 +23,32 @@ public class MetricsMojo extends AbstractMojo {
     private final MavenProject project;
     private final MavenSession session;
     private final Modules modules;
-    private final ModuleProcessingState processingState;
     private final ClassAnalyzer classAnalyzer;
     private final Renderer renderer;
 
     @Inject
-    public MetricsMojo(MavenProject project, MavenSession session, Modules collector, ModuleProcessingState processingState, ClassAnalyzer classAnalyzer, Renderer renderer) {
+    public MetricsMojo(MavenProject project, MavenSession session, Modules collector, ClassAnalyzer classAnalyzer, Renderer renderer) {
         this.project = project;
         this.session = session;
         this.modules = collector;
-        this.processingState = processingState;
         this.classAnalyzer = classAnalyzer;
         this.renderer = renderer;
     }
 
     @Override
     public void execute() {
-        var reactorModules = session.getProjects().stream()
-                .filter(p -> !"pom".equals(p.getPackaging()))
-                .map(MavenProject::getArtifactId)
-                .collect(Collectors.toSet());
-        processingState.setDetectedModules(reactorModules);
-        processingState.addProcessedModule(project.getArtifactId());
-
         var classes = classAnalyzer.processClasses(Path.of(project.getBuild().getOutputDirectory()));
         modules.addModule(new ModuleDescriptor(project.getArtifactId(), classes));
 
-        if (processingState.allModulesProcessed()) {
+        if (isLastProject()) {
             logReport();
             renderReport();
         }
+    }
+
+    private boolean isLastProject() {
+        List<MavenProject> projects = session.getProjects();
+        return projects.get(projects.size() - 1).equals(project);
     }
 
     private void logReport() {

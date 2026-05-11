@@ -540,10 +540,12 @@
             + '</div>';
           classDeps.forEach(function(cd, idx) {
             html += '<details style="margin-bottom:0.4rem;border-bottom:1px solid #f1f5f9;padding-bottom:0.3rem;">';
-            html += '<summary style="font-size:0.8rem;font-weight:600;color:#1a1a2e;cursor:pointer;padding:0.2rem 0;list-style:none;display:flex;align-items:center;gap:0.4rem;">'
-              + '<span style="font-size:0.65rem;color:#94a3b8;">▶</span> '
+            html += '<summary style="font-size:0.8rem;font-weight:600;color:#1a1a2e;cursor:pointer;padding:0.2rem 0;">'
+              + '<span style="display:inline-flex;align-items:center;gap:0.4rem;">'
+              + '<span class="edge-arrow" style="font-size:0.65rem;color:#94a3b8;display:inline-block;transition:transform 0.15s;">▶</span> '
               + cd.simple
               + '<span style="font-size:0.65rem;color:#94a3b8;font-weight:400;">→ ' + cd.refs.length + '</span>'
+              + '</span>'
               + '</summary>';
             html += '<div style="color:#94a3b8;font-size:0.65rem;word-break:break-all;margin:0.1rem 0 0.2rem 1.1rem;">' + cd.full + '</div>';
             if (cd.refs.length > 0) {
@@ -566,7 +568,7 @@
         if (!style) {
           style = document.createElement('style');
           style.id = 'edge-popup-style';
-          style.textContent = '#edge-popup-body details[open] > summary span:first-child { transform: rotate(90deg); display:inline-block; }';
+          style.textContent = '#edge-popup-body details summary { list-style: none; } #edge-popup-body details summary::-webkit-details-marker { display: none; } #edge-popup-body details[open] > summary .edge-arrow { transform: rotate(90deg); }';
           document.head.appendChild(style);
         }
 

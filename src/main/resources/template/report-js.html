@@ -463,6 +463,9 @@
         var colRightX = w - margin - nodeW;
         var textMaxW = nodeW - 16;
 
+        // Track clickable bubbles: { x, y, radius, classNames, moduleName, type }
+        var bubbles = [];
+
         // Central module node
         var cX = centerX - nodeW / 2, cY = centerY - nodeH / 2;
         ctx.fillStyle = '#4f46e5';
@@ -494,6 +497,8 @@
           ctx.beginPath(); ctx.arc(midX, midY, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
           ctx.fillStyle = '#4f46e5'; ctx.font = 'bold 9px system-ui';
           ctx.fillText(m.classCount, midX, midY + 3);
+
+          bubbles.push({ x: midX, y: midY, radius: 11, classNames: m.classNames || [], moduleName: m.moduleName, type: 'afferent' });
         });
 
         // Draw efferent modules (right side — I depend on)
@@ -518,6 +523,8 @@
           ctx.beginPath(); ctx.arc(midX, midY, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
           ctx.fillStyle = '#ca8a04'; ctx.font = 'bold 9px system-ui';
           ctx.fillText(m.classCount, midX, midY + 3);
+
+          bubbles.push({ x: midX, y: midY, radius: 11, classNames: m.classNames || [], moduleName: m.moduleName, type: 'efferent', classDependencies: m.classDependencies || [] });
         });
 
         // Legend
@@ -528,6 +535,35 @@
         ctx.fillStyle = '#ca8a04';
         ctx.fillRect(190, h - 22, 10, 10);
         ctx.fillText('Efferent (I depend on)', 204, h - 13);
+
+        // Click handler for bubbles
+        canvas.style.cursor = 'default';
+        canvas.addEventListener('mousemove', function(e) {
+          var rect = canvas.getBoundingClientRect();
+          var mx = (e.clientX - rect.left) * (w / rect.width);
+          var my = (e.clientY - rect.top) * (h / rect.height);
+          var hit = false;
+          for (var i = 0; i < bubbles.length; i++) {
+            var b = bubbles[i];
+            var dx = mx - b.x, dy = my - b.y;
+            if (dx * dx + dy * dy <= b.radius * b.radius) { hit = true; break; }
+          }
+          canvas.style.cursor = hit ? 'pointer' : 'default';
+        });
+
+        canvas.addEventListener('click', function(e) {
+          var rect = canvas.getBoundingClientRect();
+          var mx = (e.clientX - rect.left) * (w / rect.width);
+          var my = (e.clientY - rect.top) * (h / rect.height);
+          for (var i = 0; i < bubbles.length; i++) {
+            var b = bubbles[i];
+            var dx = mx - b.x, dy = my - b.y;
+            if (dx * dx + dy * dy <= b.radius * b.radius) {
+              showDepPopup(b, moduleData.name, e.clientX, e.clientY);
+              return;
+            }
+          }
+        });
       }
 
       function drawArrow(ctx, x1, y1, x2, y2, color) {
@@ -541,6 +577,100 @@
         ctx.lineTo(x2 - headLen * Math.cos(angle - 0.4), y2 - headLen * Math.sin(angle - 0.4));
         ctx.lineTo(x2 - headLen * Math.cos(angle + 0.4), y2 - headLen * Math.sin(angle + 0.4));
         ctx.closePath(); ctx.fill();
+      }
+
+      // --- Dependency detail popup ---
+      var depPopup = null;
+      function ensureDepPopup() {
+        if (depPopup) return;
+        depPopup = document.createElement('div');
+        depPopup.id = 'dep-detail-popup';
+        depPopup.style.cssText = 'display:none;position:fixed;z-index:100;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,0.15);max-width:480px;min-width:280px;font-family:system-ui,sans-serif;';
+        depPopup.innerHTML = '<div style="padding:0.75rem 1rem;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">'
+          + '<span id="dep-popup-title" style="font-size:0.85rem;font-weight:700;color:#1a1a2e;"></span>'
+          + '<button id="dep-popup-close" style="background:none;border:none;font-size:1.1rem;cursor:pointer;color:#94a3b8;padding:0 4px;" title="Close">&times;</button>'
+          + '</div><div id="dep-popup-body" style="padding:0.75rem 1rem;max-height:400px;overflow-y:auto;"></div>';
+        document.body.appendChild(depPopup);
+        document.getElementById('dep-popup-close').addEventListener('click', function() { depPopup.style.display = 'none'; });
+      }
+
+      function showDepPopup(bubble, currentModuleName, mouseX, mouseY) {
+        ensureDepPopup();
+        var titleEl = document.getElementById('dep-popup-title');
+        var bodyEl = document.getElementById('dep-popup-body');
+
+        var html = '';
+        if (bubble.type === 'efferent' && bubble.classDependencies && bubble.classDependencies.length > 0) {
+          // Show per-class detail for efferent
+          titleEl.textContent = currentModuleName + ' \u2192 ' + bubble.moduleName + ' (' + bubble.classNames.length + ' classes)';
+          html += '<div style="margin-bottom:0.5rem;text-align:right;">'
+            + '<button onclick="document.querySelectorAll(\'#dep-popup-body details\').forEach(function(d){d.open=true;})" style="font-size:0.7rem;padding:0.2rem 0.5rem;margin-right:0.3rem;border:1px solid #e2e8f0;border-radius:4px;background:#f8fafc;cursor:pointer;">▼ Expand All</button>'
+            + '<button onclick="document.querySelectorAll(\'#dep-popup-body details\').forEach(function(d){d.open=false;})" style="font-size:0.7rem;padding:0.2rem 0.5rem;border:1px solid #e2e8f0;border-radius:4px;background:#f8fafc;cursor:pointer;">▲ Collapse All</button>'
+            + '</div>';
+          bubble.classDependencies.forEach(function(cd) {
+            var srcParts = cd.className.split('.');
+            var srcSimple = srcParts[srcParts.length - 1];
+            var refs = (cd.referencedClassNames || []);
+            html += '<details style="margin-bottom:0.4rem;border-bottom:1px solid #f1f5f9;padding-bottom:0.3rem;">';
+            html += '<summary style="font-size:0.8rem;font-weight:600;color:#1a1a2e;cursor:pointer;padding:0.2rem 0;">'
+              + '<span style="display:inline-flex;align-items:center;gap:0.4rem;">'
+              + '<span class="dep-arrow" style="font-size:0.65rem;color:#94a3b8;display:inline-block;transition:transform 0.15s;">▶</span> '
+              + srcSimple
+              + '<span style="font-size:0.65rem;color:#94a3b8;font-weight:400;">\u2192 ' + refs.length + '</span>'
+              + '</span>'
+              + '</summary>';
+            html += '<div style="color:#94a3b8;font-size:0.65rem;word-break:break-all;margin:0.1rem 0 0.2rem 1.1rem;">' + cd.className + '</div>';
+            if (refs.length > 0) {
+              html += '<div style="margin-left:1.1rem;border-left:2px solid #e0e7ff;padding-left:0.5rem;">';
+              refs.forEach(function(cn) {
+                var parts = cn.split('.');
+                html += '<div style="font-size:0.75rem;padding:0.1rem 0;">'
+                  + '<span style="color:#4f46e5;font-weight:500;">' + parts[parts.length - 1] + '</span>'
+                  + '<span style="color:#94a3b8;font-size:0.65rem;margin-left:0.3rem;">' + cn + '</span>'
+                  + '</div>';
+              });
+              html += '</div>';
+            }
+            html += '</details>';
+          });
+        } else {
+          // Simple class list for afferent or fallback
+          var direction = bubble.type === 'afferent' ? (bubble.moduleName + ' \u2192 ' + currentModuleName) : (currentModuleName + ' \u2192 ' + bubble.moduleName);
+          titleEl.textContent = direction + ' (' + bubble.classNames.length + ' classes)';
+          var desc = bubble.type === 'afferent'
+            ? 'Classes in <strong>' + bubble.moduleName + '</strong> that depend on <strong>' + currentModuleName + '</strong>:'
+            : 'Classes in <strong>' + currentModuleName + '</strong> that depend on <strong>' + bubble.moduleName + '</strong>:';
+          html += '<div style="font-size:0.75rem;color:#64748b;margin-bottom:0.4rem;">' + desc + '</div>';
+          html += '<ul style="list-style:none;padding:0;margin:0;">';
+          bubble.classNames.forEach(function(cn) {
+            var parts = cn.split('.');
+            html += '<li style="padding:0.25rem 0;border-bottom:1px solid #f1f5f9;font-size:0.8rem;">'
+              + '<span style="font-weight:500;color:#1a1a2e;">' + parts[parts.length - 1] + '</span>'
+              + '<div style="color:#94a3b8;font-size:0.7rem;word-break:break-all;">' + cn + '</div>'
+              + '</li>';
+          });
+          html += '</ul>';
+        }
+        bodyEl.innerHTML = html;
+
+        // Add style for details arrow rotation
+        if (!document.getElementById('dep-popup-style')) {
+          var st = document.createElement('style');
+          st.id = 'dep-popup-style';
+          st.textContent = '#dep-popup-body details summary { list-style: none; } #dep-popup-body details summary::-webkit-details-marker { display: none; } #dep-popup-body details[open] > summary .dep-arrow { transform: rotate(90deg); }';
+          document.head.appendChild(st);
+        }
+
+        // Position
+        var pw = 420, ph = 350;
+        var left = mouseX + 16;
+        var top = mouseY - 20;
+        if (left + pw > window.innerWidth - 20) left = mouseX - pw - 16;
+        if (top + ph > window.innerHeight - 20) top = window.innerHeight - ph - 20;
+        if (top < 10) top = 10;
+        depPopup.style.left = left + 'px';
+        depPopup.style.top = top + 'px';
+        depPopup.style.display = 'block';
       }
 
       // --- Build Sidebar ---

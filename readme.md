@@ -14,3 +14,8 @@ The plugin produces a file in ``target/oo-metrics-report.html``.
 ```
 export GPG_TTY=$(tty)
 ```
+## Release
+```
+./mvnw release:prepare
+./mvnw release:perform
+```

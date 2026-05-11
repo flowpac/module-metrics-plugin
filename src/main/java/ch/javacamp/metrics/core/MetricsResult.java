@@ -55,6 +55,17 @@ public class MetricsResult {
         private final String moduleName;
         private final long classCount;
         private final List<String> classNames;
+        private final List<String> referencedClassNames;
+        private final List<ClassDependencyDetail> classDependencies;
+    }
+
+    @Builder
+    @Getter
+    @Accessors(fluent = true)
+    @AllArgsConstructor
+    public static class ClassDependencyDetail {
+        private final String className;
+        private final List<String> referencedClassNames;
     }
 
     @Builder

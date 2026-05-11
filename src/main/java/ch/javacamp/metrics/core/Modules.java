@@ -4,6 +4,7 @@ import lombok.Getter;
 
 import javax.inject.Singleton;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -116,7 +117,7 @@ public class Modules {
                     .map(ClassDescriptor::className)
                     .collect(Collectors.toList());
             if (!coupledClassNames.isEmpty()) {
-                result.add(new MetricsResult.ModuleCoupling(other.name(), coupledClassNames.size(), coupledClassNames));
+                result.add(new MetricsResult.ModuleCoupling(other.name(), coupledClassNames.size(), coupledClassNames, List.of(), List.of()));
             }
         }
         return result;
@@ -131,7 +132,26 @@ public class Modules {
                     .map(ClassDescriptor::className)
                     .collect(Collectors.toList());
             if (!coupledClassNames.isEmpty()) {
-                result.add(new MetricsResult.ModuleCoupling(other.name(), coupledClassNames.size(), coupledClassNames));
+                // Collect referenced class names from target module
+                List<String> referencedClassNames = module.classes().stream()
+                        .flatMap(c -> c.dependencies().stream())
+                        .filter(otherClassNames::contains)
+                        .distinct()
+                        .sorted()
+                        .collect(Collectors.toList());
+                // Build per-class dependency details
+                List<MetricsResult.ClassDependencyDetail> classDependencies = module.classes().stream()
+                        .filter(c -> c.hasDependency(otherClassNames))
+                        .map(c -> {
+                            List<String> refs = c.dependencies().stream()
+                                    .filter(otherClassNames::contains)
+                                    .sorted()
+                                    .collect(Collectors.toList());
+                            return new MetricsResult.ClassDependencyDetail(c.className(), refs);
+                        })
+                        .sorted(Comparator.comparing(MetricsResult.ClassDependencyDetail::className))
+                        .collect(Collectors.toList());
+                result.add(new MetricsResult.ModuleCoupling(other.name(), coupledClassNames.size(), coupledClassNames, referencedClassNames, classDependencies));
             }
         }
         return result;

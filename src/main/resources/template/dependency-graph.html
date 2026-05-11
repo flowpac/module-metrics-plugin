@@ -143,12 +143,12 @@
     </div>
 
     <!-- Edge detail popup -->
-    <div id="edge-popup" style="display:none;position:fixed;z-index:100;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,0.15);max-width:420px;min-width:260px;font-family:system-ui,sans-serif;">
+    <div id="edge-popup" style="display:none;position:fixed;z-index:100;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,0.15);max-width:500px;min-width:300px;font-family:system-ui,sans-serif;">
       <div id="edge-popup-header" style="padding:0.75rem 1rem;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">
         <span id="edge-popup-title" style="font-size:0.85rem;font-weight:700;color:#1a1a2e;"></span>
         <button id="edge-popup-close" style="background:none;border:none;font-size:1.1rem;cursor:pointer;color:#94a3b8;padding:0 4px;" title="Close">&times;</button>
       </div>
-      <div id="edge-popup-body" style="padding:0.75rem 1rem;max-height:300px;overflow-y:auto;">
+      <div id="edge-popup-body" style="padding:0.75rem 1rem;max-height:400px;overflow-y:auto;">
       </div>
     </div>
 
@@ -169,14 +169,32 @@
 
       // Build edge class lookup: edgeClasses[fromModule][toModule] = [classNames]
       var edgeClasses = {};
+      var edgeReferencedClasses = {};
+      var edgeClassDependencies = {};
       data.forEach(function(d) {
         edgeClasses[d.name] = {};
+        edgeReferencedClasses[d.name] = {};
+        edgeClassDependencies[d.name] = {};
         (d.efferentModules || []).forEach(function(m) {
           if (moduleNames[m.moduleName]) {
             edgeClasses[d.name][m.moduleName] = (m.classNames || []).map(function(cn) {
-              // Show simple class name (last part after dot)
               var parts = cn.split('.');
               return { simple: parts[parts.length - 1], full: cn };
+            });
+            edgeReferencedClasses[d.name][m.moduleName] = (m.referencedClassNames || []).map(function(cn) {
+              var parts = cn.split('.');
+              return { simple: parts[parts.length - 1], full: cn };
+            });
+            edgeClassDependencies[d.name][m.moduleName] = (m.classDependencies || []).map(function(cd) {
+              var srcParts = cd.className.split('.');
+              return {
+                simple: srcParts[srcParts.length - 1],
+                full: cd.className,
+                refs: (cd.referencedClassNames || []).map(function(cn) {
+                  var parts = cn.split('.');
+                  return { simple: parts[parts.length - 1], full: cn };
+                })
+              };
             });
           }
         });
@@ -509,27 +527,34 @@
       });
 
       function showEdgePopup(edge, mouseX, mouseY) {
-        var classes = (edgeClasses[edge.from] && edgeClasses[edge.from][edge.to]) || [];
-        popupTitle.textContent = edge.from + ' \u2192 ' + edge.to + ' (' + classes.length + ' classes)';
+        var classDeps = (edgeClassDependencies[edge.from] && edgeClassDependencies[edge.from][edge.to]) || [];
+        popupTitle.textContent = edge.from + ' \u2192 ' + edge.to + ' (' + classDeps.length + ' class' + (classDeps.length !== 1 ? 'es' : '') + ')';
 
         var html = '';
-        if (classes.length === 0) {
+        if (classDeps.length === 0) {
           html = '<div style="color:#94a3b8;font-size:0.8rem;">No class details available.</div>';
         } else {
-          html = '<div style="font-size:0.75rem;color:#64748b;margin-bottom:0.4rem;">Classes in <strong>' + edge.from + '</strong> that depend on <strong>' + edge.to + '</strong>:</div>';
-          html += '<ul style="list-style:none;padding:0;margin:0;">';
-          classes.forEach(function(c) {
-            html += '<li style="padding:0.25rem 0;border-bottom:1px solid #f1f5f9;font-size:0.8rem;">'
-              + '<span style="color:#1a1a2e;font-weight:500;">' + c.simple + '</span>'
-              + '<div style="color:#94a3b8;font-size:0.7rem;word-break:break-all;">' + c.full + '</div>'
-              + '</li>';
+          classDeps.forEach(function(cd) {
+            html += '<div style="margin-bottom:0.6rem;">';
+            html += '<div style="font-size:0.8rem;font-weight:600;color:#1a1a2e;padding:0.25rem 0;">' + cd.simple + '</div>';
+            html += '<div style="color:#94a3b8;font-size:0.65rem;word-break:break-all;margin-bottom:0.2rem;">' + cd.full + '</div>';
+            if (cd.refs.length > 0) {
+              html += '<div style="margin-left:0.75rem;border-left:2px solid #e0e7ff;padding-left:0.5rem;">';
+              cd.refs.forEach(function(r) {
+                html += '<div style="font-size:0.75rem;padding:0.1rem 0;">'
+                  + '<span style="color:#4f46e5;font-weight:500;">' + r.simple + '</span>'
+                  + '<span style="color:#94a3b8;font-size:0.65rem;margin-left:0.3rem;">' + r.full + '</span>'
+                  + '</div>';
+              });
+              html += '</div>';
+            }
+            html += '</div>';
           });
-          html += '</ul>';
         }
         popupBody.innerHTML = html;
 
         // Position popup near mouse, but keep within viewport
-        var pw = 360, ph = 250;
+        var pw = 420, ph = 350;
         var left = mouseX + 16;
         var top = mouseY - 20;
         if (left + pw > window.innerWidth - 20) left = mouseX - pw - 16;

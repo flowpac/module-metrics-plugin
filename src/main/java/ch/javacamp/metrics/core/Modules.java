@@ -70,6 +70,7 @@ public class Modules {
         var shareOfGetterSetters = module.shareOfGetterSetters();
         var shareOfMethodsWithLocalCalls = module.shareOfMethodsWithLocalCalls();
         var methodStatistics = computeMethodStatistics(module);
+        var packageLineStatistics = new LineCountCalculator().computePackages(module);
 
         return new MetricsResult.MetricsResultBuilder()
                 .numberOfClasses(module.totalClasses())
@@ -92,6 +93,7 @@ public class Modules {
                 .averageCyclomaticComplexity(module.averageCyclomaticComplexity())
                 .maxCyclomaticComplexity(module.maxCyclomaticComplexity())
                 .circularDependencies(findCircularDependencies(module))
+                .packageLineStatistics(packageLineStatistics)
                 .build();
     }
 
@@ -242,6 +244,7 @@ public class Modules {
                     .dependencyInversionRatio(currentModule.dependencyInversionRatio(classAbstractnessIndex))
                     .averageMethodsPerInterface(currentModule.averageMethodsPerInterface())
                     .maxMethodsOnInterface(currentModule.maxMethodsOnInterface())
+                    .packageLineStatistics(metrics.packageLineStatistics())
                     .build());
         }
         return result;

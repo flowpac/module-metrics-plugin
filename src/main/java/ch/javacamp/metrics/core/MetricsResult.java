@@ -38,6 +38,7 @@ public class MetricsResult {
     private final double dependencyInversionRatio;
     private final double averageMethodsPerInterface;
     private final int maxMethodsOnInterface;
+    private final List<PackageLineCount> packageLineStatistics;
 
     @Builder
     @Getter

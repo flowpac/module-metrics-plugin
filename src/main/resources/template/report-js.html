@@ -794,6 +794,14 @@
         h += '<div class="card"><div class="card-header"><h3>Abstractness / Instability</h3></div>';
         h += '<div class="diagram-wrapper"><canvas id="diagram-mod-' + i + '"></canvas></div></div>';
         h += '</div>';
+        // Package Line Statistics
+        h += '<div class="card"><div class="card-header"><h3>Lines per Package</h3></div><div class="card-body" style="padding:0;overflow-x:auto;">';
+        h += '<table class="stats-table"><thead><tr><th>Package</th><th style="text-align:right">Lines</th></tr></thead><tbody>';
+        var pkgs = (d.packageLineStatistics || []).slice().sort(function(a, b) { return b.totalLines - a.totalLines; });
+        pkgs.forEach(function(p) {
+          h += '<tr><td style="font-family:monospace;font-size:0.8rem">' + p.packageName + '</td><td style="text-align:right;font-weight:600">' + p.totalLines + '</td></tr>';
+        });
+        h += '</tbody></table></div></div>';
         document.getElementById('content-mod-' + i).innerHTML = h;
       });
 

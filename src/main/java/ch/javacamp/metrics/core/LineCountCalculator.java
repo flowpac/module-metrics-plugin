@@ -4,7 +4,11 @@ import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class LineCountCalculator {
 
@@ -20,6 +24,26 @@ public class LineCountCalculator {
                 .forEach(stats::addValue);
 
         return new LineCountResult(stats);
+    }
+
+    public List<PackageLineCount> computePackages(ModuleDescriptor descriptor) {
+        Map<String, Long> linesByPackage = descriptor.classes()
+                .stream()
+                .collect(Collectors.groupingBy(
+                        cls -> {
+                            String name = cls.className();
+                            int dot = name.lastIndexOf('.');
+                            return dot >= 0 ? name.substring(0, dot) : "(default)";
+                        },
+                        Collectors.summingLong(cls -> cls.methods().stream()
+                                .mapToLong(MethodDescriptor::lines)
+                                .sum())
+                ));
+
+        return linesByPackage.entrySet().stream()
+                .map(e -> new PackageLineCount(e.getKey(), e.getValue()))
+                .sorted(Comparator.comparing(PackageLineCount::packageName))
+                .collect(Collectors.toList());
     }
 
     @Getter

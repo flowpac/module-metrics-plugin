@@ -3,11 +3,7 @@ package ch.javacamp.metrics.analyzer;
 import ch.javacamp.metrics.core.MethodDescriptor;
 import ch.javacamp.metrics.core.MethodInvocation;
 import ch.javacamp.metrics.core.Visibility;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
+import org.objectweb.asm.*;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 

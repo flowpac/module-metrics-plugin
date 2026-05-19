@@ -13,14 +13,10 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import static ch.javacamp.metrics.analyzer.AsmUtils.*;
+import static ch.javacamp.metrics.analyzer.AsmUtils.transformClassName;
 
 public class DependencyAnalyzer {
 

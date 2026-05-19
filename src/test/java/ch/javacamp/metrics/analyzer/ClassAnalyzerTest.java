@@ -4,7 +4,6 @@ import ch.javacamp.metrics.analyzer.test.TestClassA;
 import ch.javacamp.metrics.analyzer.test.TestClassB;
 import ch.javacamp.metrics.analyzer.test.TestClassC;
 import ch.javacamp.metrics.core.ClassDescriptor;
-
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
